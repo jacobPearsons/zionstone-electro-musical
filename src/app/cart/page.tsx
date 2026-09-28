@@ -7,20 +7,33 @@ import { useCart } from "@/lib/cart-context";
 import { Trash2, Plus, Minus, ShoppingBag, Truck } from "lucide-react";
 import { formatPrice } from "@/lib/utils";
 import { ShippingCalculator, DeliveryEstimate } from "@/components/shipping";
-import { calculateShipping } from "@/lib/shipping";
+import {
+  calculateShipping,
+  qualifiesForFreeShipping,
+  FREE_SHIPPING_THRESHOLD,
+  STANDARD_SHIPPING_FALLBACK,
+} from "@/lib/shipping";
+import { promoDiscount, type PromoCode } from "@/lib/promo-codes";
 import { PromoCodeInput } from "@/components/PromoCodeInput";
 import type { ShippingMethod } from "@/types/shipping";
 
 export default function CartPage() {
   const { items, removeItem, updateQuantity, totalPrice, clearCart } = useCart();
   const [selectedShipping, setSelectedShipping] = useState<ShippingMethod | null>(null);
-  const [estimatedDelivery, setEstimatedDelivery] = useState<Date | null>(null);
-  const [discount, setDiscount] = useState(0);
-  
-  const shippingCost = selectedShipping?.price || (totalPrice >= 99 ? 0 : 9.99);
-  const finalTotal = totalPrice - discount + shippingCost;
+  const [estimatedDelivery, setEstimatedDelivery] = useState<string | null>(null);
+  const [promo, setPromo] = useState<PromoCode | null>(null);
 
-  const handleShippingCalculate = (method: ShippingMethod, deliveryDate: Date) => {
+  // The promo contributes a rate, not an amount: the saving is always derived
+  // from the live subtotal, and `promoDiscount` clamps it to the subtotal so a
+  // discount can never push the total below zero.
+  const discount = promoDiscount(promo, totalPrice);
+  // Measured on the subtotal *before* the discount, so applying a promo never
+  // takes away free shipping the customer was already promised.
+  const freeShipping = qualifiesForFreeShipping(totalPrice);
+  const shippingCost = selectedShipping?.price ?? (freeShipping ? 0 : STANDARD_SHIPPING_FALLBACK);
+  const finalTotal = Math.max(0, totalPrice - discount + shippingCost);
+
+  const handleShippingCalculate = (method: ShippingMethod, deliveryDate: string) => {
     setSelectedShipping(method);
     setEstimatedDelivery(deliveryDate);
   };
@@ -29,68 +42,75 @@ export default function CartPage() {
     return (
       <div className="container mx-auto px-4 py-16 text-center">
         <ShoppingBag className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
-        <h1 className="text-2xl font-bold mb-2">Your cart is empty</h1>
+        <h1 className="text-2xl font-semibold tracking-tight mb-2">Your cart is empty</h1>
         <p className="text-muted-foreground mb-6">Add some products to get started!</p>
-        <Link href="/products">
-          <Button>Continue Shopping</Button>
-        </Link>
+        <Button asChild>
+          <Link href="/products">Continue Shopping</Link>
+        </Button>
       </div>
     );
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold mb-8">Shopping Cart</h1>
+    <div className="container mx-auto px-4 py-12 md:py-16">
+      <h1 className="text-3xl font-semibold tracking-tight mb-8">Shopping Cart</h1>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2 space-y-4">
           {items.map((item) => (
-            <div key={item.id} className="flex gap-4 p-4 border rounded-lg">
-              <div className="w-24 h-24 bg-gray-100 rounded-lg flex items-center justify-center">
+            <div key={item.id} className="flex flex-wrap items-start gap-4 rounded-card border border-border bg-card p-4 shadow-card">
+              <div className="w-24 h-24 flex-shrink-0 bg-muted rounded-card flex items-center justify-center">
                 <span className="text-4xl">{item.image}</span>
               </div>
-              <div className="flex-1">
-                <Link href={`/products/${item.productId}`} className="font-semibold hover:text-primary">
-                  {item.name}
-                </Link>
-                <p className="text-muted-foreground text-sm mt-1">{formatPrice(item.price)}</p>
-                <div className="flex items-center gap-4 mt-3">
-                  <div className="flex items-center border rounded-md">
+              <div className="flex-1 min-w-40">
+                {item.slug ? (
+                  <Link href={`/products/${item.slug}`} className="inline-flex min-h-11 items-center font-semibold transition-colors duration-200 ease-out hover:text-primary-strong">
+                    {item.name}
+                  </Link>
+                ) : (
+                  <span className="font-semibold">{item.name}</span>
+                )}
+                <p className="text-sm tabular-nums text-muted-foreground mt-1">{formatPrice(item.price)}</p>
+                <div className="flex flex-wrap items-center gap-2 sm:gap-4 mt-3">
+                  <div className="flex flex-shrink-0 items-center overflow-hidden rounded-card border border-border">
                     <button
                       onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                      className="p-2 hover:bg-gray-100"
+                      aria-label={`Decrease quantity of ${item.name}`}
+                      className="flex h-11 w-11 flex-shrink-0 items-center justify-center transition-colors duration-200 ease-out hover:bg-muted"
                     >
-                      <Minus className="h-4 w-4" />
+                      <Minus className="h-4 w-4" aria-hidden="true" />
                     </button>
-                    <span className="px-3">{item.quantity}</span>
+                    <span className="min-w-10 px-3 text-center tabular-nums">{item.quantity}</span>
                     <button
                       onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                      className="p-2 hover:bg-gray-100"
+                      aria-label={`Increase quantity of ${item.name}`}
+                      className="flex h-11 w-11 flex-shrink-0 items-center justify-center transition-colors duration-200 ease-out hover:bg-muted"
                     >
-                      <Plus className="h-4 w-4" />
+                      <Plus className="h-4 w-4" aria-hidden="true" />
                     </button>
                   </div>
                   <button
                     onClick={() => removeItem(item.id)}
-                    className="text-destructive hover:text-destructive/80"
+                    aria-label={`Remove ${item.name} from cart`}
+                    className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full text-destructive transition-colors duration-200 ease-out hover:bg-destructive/10"
                   >
-                    <Trash2 className="h-5 w-5" />
+                    <Trash2 className="h-5 w-5" aria-hidden="true" />
                   </button>
                 </div>
               </div>
-              <div className="text-right">
-                <p className="font-semibold">{formatPrice(item.price * item.quantity)}</p>
+              <div className="ml-auto text-right">
+                <p className="font-semibold tabular-nums">{formatPrice(item.price * item.quantity)}</p>
               </div>
             </div>
           ))}
-          <Button variant="outline" onClick={clearCart} className="mt-4">
+          <Button variant="outline" onClick={clearCart} className="mt-4 text-destructive hover:text-destructive/80">
             Clear Cart
           </Button>
         </div>
 
         <div>
-          <div className="border rounded-lg p-6 sticky top-24">
-            <h2 className="text-lg font-semibold mb-4">Order Summary</h2>
+          <div className="rounded-card border border-border bg-muted p-6 sticky top-24">
+            <h2 className="text-lg font-semibold tracking-tight mb-4">Order Summary</h2>
             
             {/* Shipping Calculator */}
             <div className="mb-6">
@@ -110,43 +130,42 @@ export default function CartPage() {
             </div>
             
             <div className="space-y-3 mb-6">
-              <PromoCodeInput onApply={setDiscount} />
-              
+              <PromoCodeInput onApply={setPromo} subtotal={totalPrice} />
+
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">Subtotal</span>
-                <span>{formatPrice(totalPrice)}</span>
+                <span className="tabular-nums">{formatPrice(totalPrice)}</span>
               </div>
-              {discount > 0 && (
-                <div className="flex justify-between text-sm text-green-600">
-                  <span>Discount</span>
-                  <span>-{formatPrice(discount)}</span>
+              {promo && discount > 0 && (
+                <div className="flex justify-between text-sm text-emerald-600 dark:text-emerald-400">
+                  <span>Discount ({promo.code}, {promo.percent}%)</span>
+                  <span className="tabular-nums">-{formatPrice(discount)}</span>
                 </div>
               )}
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">Shipping</span>
-                <span>
-                  {selectedShipping 
+                <span className="tabular-nums">
+                  {selectedShipping
                     ? formatPrice(selectedShipping.price)
-                    : (totalPrice >= 99 ? "Free" : formatPrice(9.99))
+                    : (freeShipping ? "Free" : formatPrice(STANDARD_SHIPPING_FALLBACK))
                   }
                 </span>
               </div>
-              {totalPrice >= 99 && !selectedShipping && (
-                <div className="flex justify-between text-sm text-green-600">
-                  <span>Free Shipping Applied</span>
-                  <span>-{formatPrice(9.99)}</span>
-                </div>
+              {freeShipping && !selectedShipping && (
+                <p className="text-sm text-emerald-600 dark:text-emerald-400">
+                  Free shipping applied on orders over {formatPrice(FREE_SHIPPING_THRESHOLD)}
+                </p>
               )}
-              <div className="border-t pt-3 flex justify-between font-semibold">
+              <div className="border-t border-border pt-3 flex justify-between text-lg font-semibold">
                 <span>Total</span>
-                <span>{formatPrice(finalTotal)}</span>
+                <span className="tabular-nums">{formatPrice(finalTotal)}</span>
               </div>
             </div>
-            <Link href="/checkout">
-              <Button className="w-full" size="lg">Proceed to Checkout</Button>
-            </Link>
+            <Button asChild className="w-full" size="lg">
+              <Link href="/checkout">Proceed to Checkout</Link>
+            </Button>
             <p className="text-xs text-muted-foreground text-center mt-4">
-              Free shipping on orders over $99
+              Free shipping on orders over {formatPrice(FREE_SHIPPING_THRESHOLD)}
             </p>
           </div>
         </div>

@@ -1,9 +1,11 @@
 "use client";
 
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import { readStoredArray } from "@/lib/utils";
 
 export interface WishlistItem {
   id: string;
+  /** Product identity: `Product.id`, never the slug — `slug` is only for building links. */
   productId: string;
   name: string;
   price: number;
@@ -23,19 +25,32 @@ interface WishlistContextType {
 
 const WishlistContext = createContext<WishlistContextType | undefined>(undefined);
 
+function isWishlistItem(value: unknown): value is WishlistItem {
+  if (typeof value !== "object" || value === null) return false;
+  return (
+    "id" in value && typeof value.id === "string" &&
+    "productId" in value && typeof value.productId === "string" &&
+    "name" in value && typeof value.name === "string" &&
+    "image" in value && typeof value.image === "string" &&
+    "price" in value && typeof value.price === "number" && Number.isFinite(value.price) &&
+    (!("slug" in value) || value.slug === undefined || typeof value.slug === "string") &&
+    (!("brand" in value) || value.brand === undefined || typeof value.brand === "string")
+  );
+}
+
 export function WishlistProvider({ children }: { children: ReactNode }) {
   const [items, setItems] = useState<WishlistItem[]>([]);
+  const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
-    const saved = localStorage.getItem("wishlist");
-    if (saved) {
-      setItems(JSON.parse(saved));
-    }
+    setItems(readStoredArray<WishlistItem>("wishlist", isWishlistItem));
+    setHydrated(true);
   }, []);
 
   useEffect(() => {
+    if (!hydrated) return;
     localStorage.setItem("wishlist", JSON.stringify(items));
-  }, [items]);
+  }, [items, hydrated]);
 
   const addItem = (item: Omit<WishlistItem, "id">) => {
     setItems((prev) => {

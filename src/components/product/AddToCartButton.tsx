@@ -25,7 +25,7 @@ export function AddToCartButton({ product, className = '' }: AddToCartButtonProp
   if (added || isInCart) {
     return (
       <Button variant="outline" className={`w-full mt-3 ${className}`} disabled>
-        <Check className="w-4 h-4 mr-2" />
+        <Check className="w-4 h-4 mr-2 text-emerald-600 dark:text-emerald-400" />
         Added to Cart
       </Button>
     );
@@ -34,7 +34,7 @@ export function AddToCartButton({ product, className = '' }: AddToCartButtonProp
   return (
     <Button 
       onClick={handleAddToCart} 
-      className={`w-full mt-3 bg-yellow-600 hover:bg-yellow-700 ${className}`}
+      className={`w-full mt-3 bg-primary text-primary-foreground hover:bg-primary/90 ${className}`}
     >
       <ShoppingCart className="w-4 h-4 mr-2" />
       Add to Cart

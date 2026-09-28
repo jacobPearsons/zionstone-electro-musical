@@ -38,12 +38,18 @@ export function SpecsTable({ specs, features }: SpecsTableProps) {
     <div className="space-y-8">
       {hasFeatures && (
         <div>
-          <h3 className="text-lg font-semibold mb-4">Key Features</h3>
+          <h3 className="text-lg font-semibold tracking-tight mb-4">Key Features</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             {features.map((feature, index) => (
-              <div key={index} className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg">
-                <div className="w-6 h-6 bg-yellow-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                  <Check className="w-4 h-4 text-yellow-600" />
+              <div key={index} className="flex items-start gap-3 p-3 bg-muted rounded-2xl">
+                {/*
+                  Neutral, like the three non-shipping circles in
+                  `ValueProps.tsx`: one gold disc per feature row is a pattern,
+                  not an accent, and the row is already on `bg-muted` — so the
+                  disc takes `bg-background` to stay visible.
+                */}
+                <div className="w-6 h-6 bg-background rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <Check className="w-4 h-4 text-foreground" />
                 </div>
                 <span className="text-sm">{feature}</span>
               </div>

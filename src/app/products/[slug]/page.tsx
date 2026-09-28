@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { use, useState, useEffect } from 'react';
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowLeft, Share2, Truck, Shield, RotateCcw, Clock } from "lucide-react";
@@ -8,24 +8,26 @@ import { Button } from "@/components/ui/button";
 import { ShippingBadge, DeliveryEstimate, ShippingSelector } from '@/components/shipping';
 import { AddToCartButton, WishlistButton, ProductTabs, CompatibilityChecker, DeliveryEstimator } from '@/components/product';
 import { getProductBySlug, getRelatedProducts } from '@/data/products';
-import { calculateShipping } from '@/lib/shipping';
+import { calculateShipping, getShippingBadgeText } from '@/lib/shipping';
+import { formatPrice } from '@/lib/utils';
 import { useRecentlyViewed } from '@/lib/recently-viewed-context';
 import type { ShippingMethod } from '@/types/shipping';
 
-export default function ProductDetailPage({ params }: { params: { slug: string } }) {
+export default function ProductDetailPage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = use(params);
   const [quantity, setQuantity] = useState(1);
   const [selectedShipping, setSelectedShipping] = useState<ShippingMethod | null>(null);
   const [shippingCalculation, setShippingCalculation] = useState(() => calculateShipping('90210'));
   const [selectedImage, setSelectedImage] = useState(0);
-  const [product, setProduct] = useState(getProductBySlug(params.slug));
+  const [product, setProduct] = useState(() => getProductBySlug(slug));
   const { items: recentlyViewed, addItem } = useRecentlyViewed();
 
   useEffect(() => {
-    const found = getProductBySlug(params.slug);
+    const found = getProductBySlug(slug);
     setProduct(found);
     setQuantity(1);
     setSelectedImage(0);
-  }, [params.slug]);
+  }, [slug]);
 
   useEffect(() => {
     if (product) {
@@ -39,12 +41,12 @@ export default function ProductDetailPage({ params }: { params: { slug: string }
 
   if (!product) {
     return (
-      <div className="container mx-auto px-4 py-16 text-center">
-        <h1 className="text-2xl font-bold mb-4">Product Not Found</h1>
+      <div className="container mx-auto px-4 py-16 text-center md:py-24">
+        <h1 className="mb-4 text-2xl font-semibold tracking-tight">Product Not Found</h1>
         <p className="text-muted-foreground mb-6">The product you&apos;re looking for doesn&apos;t exist.</p>
-        <Link href="/products">
-          <Button>Browse Products</Button>
-        </Link>
+        <Button asChild>
+          <Link href="/products">Browse Products</Link>
+        </Button>
       </div>
     );
   }
@@ -55,9 +57,9 @@ export default function ProductDetailPage({ params }: { params: { slug: string }
     : [product.emoji];
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="container mx-auto px-4 py-16 md:py-24">
       {/* Breadcrumb */}
-      <Link href="/products" className="inline-flex items-center gap-2 text-muted-foreground hover:text-yellow-600 dark:hover:text-yellow-400 mb-6 transition-colors">
+      <Link href="/products" className="mb-6 inline-flex items-center gap-2 text-sm text-muted-foreground underline-offset-4 transition-colors duration-200 ease-out hover:text-primary-strong">
         <ArrowLeft className="h-4 w-4" />
         Back to Products
       </Link>
@@ -65,7 +67,7 @@ export default function ProductDetailPage({ params }: { params: { slug: string }
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
         {/* Product Images */}
         <div className="space-y-4">
-          <div className="relative bg-background dark:bg-gray-900 rounded-2xl border overflow-hidden">
+          <div className="relative overflow-hidden rounded-card border border-border bg-muted">
             <div className="aspect-square flex items-center justify-center">
               {productImages[selectedImage]?.startsWith('/') ? (
                 <Image
@@ -77,7 +79,7 @@ export default function ProductDetailPage({ params }: { params: { slug: string }
                   priority
                 />
               ) : (
-                <span className="text-[180px]">{productImages[selectedImage]}</span>
+                <span className="text-4xl">{productImages[selectedImage]}</span>
               )}
             </div>
             <div className="absolute top-4 left-4 z-10">
@@ -87,7 +89,7 @@ export default function ProductDetailPage({ params }: { params: { slug: string }
               />
             </div>
             {(product.originalPrice ?? 0) > product.price && (
-              <div className="absolute top-4 right-4 bg-red-500 text-white text-sm font-bold px-3 py-1 rounded-lg z-10">
+              <div className="absolute top-4 right-4 z-10 rounded-full bg-destructive px-3 py-1 text-sm font-semibold text-destructive-foreground">
                 {Math.round((1 - product.price / (product.originalPrice ?? product.price)) * 100)}% OFF
               </div>
             )}
@@ -100,10 +102,10 @@ export default function ProductDetailPage({ params }: { params: { slug: string }
                 <button
                   key={i}
                   onClick={() => setSelectedImage(i)}
-                  className={`relative flex-shrink-0 w-20 h-20 rounded-lg border-2 transition-all overflow-hidden ${
+                  className={`relative flex-shrink-0 w-20 h-20 overflow-hidden rounded-card border-2 transition-colors duration-200 ease-out ${
                     selectedImage === i 
-                      ? 'border-purple-500 ring-2 ring-purple-200 dark:ring-purple-900' 
-                      : 'border-gray-200 dark:border-gray-700 hover:border-purple-300'
+                      ? 'border-primary ring-2 ring-primary/20' 
+                      : 'border-border hover:border-primary/40'
                   }`}
                 >
                   {img?.startsWith('/') ? (
@@ -124,36 +126,53 @@ export default function ProductDetailPage({ params }: { params: { slug: string }
 
         {/* Product Info */}
         <div>
-          <p className="text-sm text-yellow-600 dark:text-yellow-400 font-medium mb-2">{product.brand}</p>
-          <h1 className="text-3xl md:text-4xl font-bold mb-4">{product.name}</h1>
+          <p className="mb-2 text-xs font-medium uppercase tracking-wider text-muted-foreground">{product.brand}</p>
+          <h1 className="mb-4 text-4xl font-semibold tracking-tight md:text-5xl">{product.name}</h1>
           
-          {/* Rating */}
+          {/* Rating. The loop stays inline: it is two lines of arithmetic and a
+              glyph, and a `StarRating` component for one call site would be
+              ceremony (spec §3.7 / §8.4, decision recorded there). Two things it
+              must get right, and one of them it did not:
+              - `star <= Math.round(product.rating)` rounded every rating in the
+                catalogue up to 5, so a 4.6 rendered as five filled stars — the
+                distinction was computed and then thrown away. `rating >= star`
+                fills the threshold instead, so 4.6 shows four and 4.9 shows five.
+              - The empty star is `☆`, not a dimmer `★`, so the difference
+                survives greyscale, high contrast and colour-vision deficiency
+                (WCAG 1.4.1). Opacity alone was the only signal.
+              The row is `aria-hidden` because the number beside it is the value;
+              a screen reader should hear "4.8 (2,173 reviews)", not five stars. */}
           <div className="flex items-center gap-3 mb-4">
-            <div className="flex items-center gap-1">
-              {[1, 2, 3, 4, 5].map((star) => (
-                <span 
-                  key={star} 
-                  className={`text-lg ${star <= Math.round(product.rating) ? 'text-yellow-400' : 'text-gray-300 dark:text-gray-600'}`}
-                >
-                  ★
-                </span>
-              ))}
+            <div className="flex items-center gap-1" aria-hidden="true">
+              {[1, 2, 3, 4, 5].map((star) => {
+                const filled = star <= product.rating;
+                return (
+                  <span
+                    key={star}
+                    className={`text-lg ${filled ? 'text-foreground' : 'text-muted-foreground/40'}`}
+                  >
+                    {filled ? '★' : '☆'}
+                  </span>
+                );
+              })}
             </div>
             <span className="text-sm text-muted-foreground">
               {product.rating} ({product.reviews.toLocaleString()} reviews)
             </span>
           </div>
 
-          {/* Price */}
+          {/* Price — the single gold moment in the buy column. 30px semibold
+              clears the >=24px / >=18.66px-bold bar, so `text-primary` is legal
+              here; everything else in the column stays on neutral or muted. */}
           <div className="flex items-baseline gap-4 mb-4">
-            <span className="text-3xl font-bold text-yellow-600 dark:text-yellow-400">${product.price}</span>
+            <span className="text-3xl font-semibold tabular-nums tracking-tight text-primary">{formatPrice(product.price)}</span>
             {product.originalPrice && product.originalPrice > product.price && (
               <>
-                <span className="text-xl text-muted-foreground line-through">
-                  ${product.originalPrice}
+                <span className="text-xl tabular-nums text-muted-foreground line-through">
+                  {formatPrice(product.originalPrice)}
                 </span>
-                <span className="bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 px-2 py-1 rounded text-sm font-medium">
-                  Save ${(product.originalPrice - product.price).toFixed(2)}
+                <span className="rounded-full bg-destructive/10 px-2 py-1 text-sm font-medium text-destructive">
+                  Save {formatPrice(product.originalPrice - product.price)}
                 </span>
               </>
             )}
@@ -177,27 +196,27 @@ export default function ProductDetailPage({ params }: { params: { slug: string }
           <div className="flex items-center gap-2 mb-6">
             {product.inventory && product.inventory > 0 ? (
               <>
-                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                <span className="text-sm text-green-600 dark:text-green-400 font-medium">
+                <div className="w-2 h-2 bg-emerald-500 rounded-full"></div>
+                <span className="text-sm font-medium text-emerald-600 dark:text-emerald-400">
                   In Stock ({product.inventory} available)
                 </span>
               </>
             ) : (
               <>
-                <div className="w-2 h-2 bg-red-500 rounded-full"></div>
-                <span className="text-sm text-red-600 dark:text-red-400 font-medium">Out of Stock</span>
+                <div className="w-2 h-2 bg-destructive rounded-full"></div>
+                <span className="text-sm font-medium text-destructive">Out of Stock</span>
               </>
             )}
           </div>
 
           {/* Shipping Information */}
-          <div className="mb-6 p-5 bg-yellow-50 dark:bg-yellow-950 rounded-xl border border-purple-100 dark:border-purple-900">
-            <div className="flex items-center justify-between mb-4">
+          <div className="mb-6 rounded-card border border-border bg-muted p-5">
+            <div className="mb-4 flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <Truck className="w-5 h-5 text-yellow-600 dark:text-yellow-400" />
-                <h3 className="font-medium">Shipping to 90210</h3>
+                <Truck className="w-5 h-5 text-muted-foreground" />
+                <h3 className="font-semibold tracking-tight">Shipping to 90210</h3>
               </div>
-              <button className="text-sm text-yellow-600 dark:text-yellow-400 hover:underline font-medium">Change location</button>
+              <button className="text-sm font-medium text-primary-strong underline-offset-4 transition-colors duration-200 ease-out hover:text-primary-strong/80 hover:underline">Change location</button>
             </div>
             
             {selectedShipping && shippingCalculation.estimatedDeliveryDates[selectedShipping.id] && (
@@ -219,9 +238,9 @@ export default function ProductDetailPage({ params }: { params: { slug: string }
           {/* Add to Cart / Wishlist */}
           <div className="flex items-center gap-4 mb-6">
             {/* Quantity Selector */}
-            <div className="flex items-center border rounded-lg overflow-hidden bg-background">
+            <div className="flex items-center overflow-hidden rounded-card border border-border bg-background">
               <button 
-                className="px-4 py-3 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-lg font-medium"
+                className="px-4 py-3 text-lg font-medium transition-colors duration-200 ease-out hover:bg-muted"
                 onClick={() => setQuantity(Math.max(1, quantity - 1))}
               >
                 −
@@ -232,10 +251,10 @@ export default function ProductDetailPage({ params }: { params: { slug: string }
                 onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value) || 1))}
                 min={1} 
                 max={product.inventory || 99}
-                className="w-16 text-center border-x py-3 font-medium bg-background" 
+                className="w-16 border-x border-border py-3 text-center font-medium tabular-nums bg-background" 
               />
               <button 
-                className="px-4 py-3 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-lg font-medium"
+                className="px-4 py-3 text-lg font-medium transition-colors duration-200 ease-out hover:bg-muted"
                 onClick={() => setQuantity(Math.min(product.inventory || 99, quantity + 1))}
               >
                 +
@@ -245,7 +264,7 @@ export default function ProductDetailPage({ params }: { params: { slug: string }
             {/* Add to Cart Button */}
             <AddToCartButton
               product={{
-                productId: product.slug,
+                productId: product.id,
                 name: product.name,
                 price: product.price,
                 image: product.emoji,
@@ -261,7 +280,7 @@ export default function ProductDetailPage({ params }: { params: { slug: string }
           <div className="flex gap-3 mb-8">
             <WishlistButton
               product={{
-                productId: product.slug,
+                productId: product.id,
                 name: product.name,
                 price: product.price,
                 image: product.emoji,
@@ -286,18 +305,24 @@ export default function ProductDetailPage({ params }: { params: { slug: string }
           </div>
 
           {/* Trust Badges */}
-          <div className="grid grid-cols-3 gap-4 p-4 bg-gray-50 dark:bg-gray-900 rounded-xl">
+          <div className="grid grid-cols-3 divide-x divide-border border-y border-border py-5">
             <div className="text-center">
-              <Shield className="w-6 h-6 mx-auto text-green-600 dark:text-green-400 mb-1" />
+              <Shield className="mb-1 mx-auto h-6 w-6 text-muted-foreground" />
               <p className="text-xs text-muted-foreground">Authentic</p>
             </div>
             <div className="text-center">
-              <RotateCcw className="w-6 h-6 mx-auto text-blue-600 dark:text-blue-400 mb-1" />
+              <RotateCcw className="mb-1 mx-auto h-6 w-6 text-muted-foreground" />
               <p className="text-xs text-muted-foreground">30-Day Returns</p>
             </div>
             <div className="text-center">
-              <Truck className="w-6 h-6 mx-auto text-yellow-600 dark:text-yellow-400 mb-1" />
-              <p className="text-xs text-muted-foreground">2-Day Shipping</p>
+              <Truck className="mb-1 mx-auto h-6 w-6 text-muted-foreground" />
+              {/* This badge used to read a flat "2-Day Shipping", but only 2 of 14
+                  products are two-day eligible and delivery also depends on the
+                  destination zone. It now states this product's real dispatch time
+                  via the same helper the rest of the store uses. */}
+              <p className="text-xs text-muted-foreground">
+                {getShippingBadgeText(product.shipsInDays, product.twoDayEligible)}
+              </p>
             </div>
           </div>
         </div>
@@ -305,17 +330,17 @@ export default function ProductDetailPage({ params }: { params: { slug: string }
 
       {/* Related Products */}
       {relatedProducts.length > 0 && (
-        <div className="mt-12">
-          <h2 className="text-xl font-bold mb-6">You May Also Like</h2>
+        <div className="mt-16 md:mt-24">
+          <h2 className="mb-6 text-2xl font-semibold tracking-tight md:text-3xl">You May Also Like</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {relatedProducts.map((relatedProduct) => (
               <Link
                 key={relatedProduct.id}
                 href={`/products/${relatedProduct.slug}`}
-                className="group bg-background dark:bg-gray-900 rounded-xl border shadow-sm overflow-hidden hover:shadow-lg transition-all"
+                className="group overflow-hidden rounded-card border border-border bg-card shadow-card transition-shadow duration-200 ease-out hover:shadow-card-hover"
               >
-                <div className="aspect-square bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 relative flex items-center justify-center">
-                  <span className="text-5xl">{relatedProduct.emoji}</span>
+                <div className="relative flex aspect-square items-center justify-center bg-muted">
+                  <span className="text-4xl">{relatedProduct.emoji}</span>
                   <div className="absolute top-3 left-3">
                     <ShippingBadge
                       shipsInDays={relatedProduct.shipsInDays}
@@ -324,11 +349,11 @@ export default function ProductDetailPage({ params }: { params: { slug: string }
                   </div>
                 </div>
                 <div className="p-4">
-                  <p className="text-xs text-muted-foreground">{relatedProduct.brand}</p>
-                  <h3 className="font-semibold line-clamp-2 group-hover:text-yellow-600 dark:group-hover:text-yellow-400 transition-colors">
+                  <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">{relatedProduct.brand}</p>
+                  <h3 className="line-clamp-2 font-semibold tracking-tight transition-colors duration-200 ease-out group-hover:text-primary-strong">
                     {relatedProduct.name}
                   </h3>
-                  <p className="text-lg font-bold mt-2">${relatedProduct.price}</p>
+                  <p className="mt-2 text-lg font-semibold tabular-nums text-primary-strong">{formatPrice(relatedProduct.price)}</p>
                 </div>
               </Link>
             ))}
@@ -338,10 +363,10 @@ export default function ProductDetailPage({ params }: { params: { slug: string }
 
       {/* Recently Viewed Products */}
       {recentlyViewed.length > 1 && (
-        <div className="mt-12">
+        <div className="mt-16 md:mt-24">
           <div className="flex items-center gap-2 mb-6">
-            <Clock className="w-5 h-5 text-yellow-600 dark:text-yellow-400" />
-            <h2 className="text-xl font-bold">Recently Viewed</h2>
+            <Clock className="h-5 w-5 text-muted-foreground" />
+            <h2 className="text-2xl font-semibold tracking-tight md:text-3xl">Recently Viewed</h2>
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-4">
             {recentlyViewed
@@ -351,16 +376,16 @@ export default function ProductDetailPage({ params }: { params: { slug: string }
                 <Link
                   key={viewedProduct.id}
                   href={`/products/${viewedProduct.slug}`}
-                  className="group bg-background dark:bg-gray-900 rounded-lg border p-3 hover:shadow-md transition-all"
+                  className="group rounded-card border border-border bg-card p-3 shadow-card transition-shadow duration-200 ease-out hover:shadow-card-hover"
                 >
-                  <div className="aspect-square bg-gray-50 dark:bg-gray-800 rounded-lg flex items-center justify-center mb-2">
-                    <span className="text-3xl">{viewedProduct.emoji}</span>
+                  <div className="mb-2 flex aspect-square items-center justify-center rounded-lg bg-muted">
+                    <span className="text-4xl">{viewedProduct.emoji}</span>
                   </div>
-                  <p className="text-xs text-muted-foreground truncate">{viewedProduct.brand}</p>
-                  <h3 className="text-sm font-medium line-clamp-2 group-hover:text-yellow-600 dark:group-hover:text-yellow-400 transition-colors">
+                  <p className="truncate text-xs font-medium uppercase tracking-wider text-muted-foreground">{viewedProduct.brand}</p>
+                  <h3 className="line-clamp-2 text-sm font-medium transition-colors duration-200 ease-out group-hover:text-primary-strong">
                     {viewedProduct.name}
                   </h3>
-                  <p className="text-sm font-bold mt-1">${viewedProduct.price}</p>
+                  <p className="mt-1 text-sm font-semibold tabular-nums text-primary-strong">{formatPrice(viewedProduct.price)}</p>
                 </Link>
               ))}
           </div>

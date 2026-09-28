@@ -4,6 +4,8 @@ import { useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Truck, Check, Loader2 } from 'lucide-react';
+import { formatDeliveryDate } from '@/lib/shipping';
+import { formatPrice } from '@/lib/utils';
 
 interface DeliveryEstimatorProps {
   productId?: string;
@@ -32,11 +34,7 @@ export function DeliveryEstimator({ productId }: DeliveryEstimatorProps) {
       await new Promise(resolve => setTimeout(resolve, 800));
       
       setEstimate({
-        date: new Date(Date.now() + 3 * 86400000).toLocaleDateString('en-US', {
-          weekday: 'long',
-          month: 'short',
-          day: 'numeric',
-        }),
+        date: new Date(Date.now() + 3 * 86400000).toISOString(),
         cost: 0,
         available: true,
       });
@@ -48,10 +46,10 @@ export function DeliveryEstimator({ productId }: DeliveryEstimatorProps) {
   };
 
   return (
-    <div className="space-y-3 p-4 bg-gray-50 rounded-lg">
+    <div className="space-y-3 p-4 bg-muted rounded-2xl">
       <div className="flex items-center gap-2 text-sm font-medium">
-        <Truck className="w-4 h-4" />
-        <span className="text-black">Delivery Estimate</span>
+        <Truck className="w-4 h-4 text-muted-foreground" />
+        <span>Delivery Estimate</span>
       </div>
 
       <div className="flex gap-2">
@@ -73,15 +71,15 @@ export function DeliveryEstimator({ productId }: DeliveryEstimatorProps) {
       </div>
 
       {error && (
-        <p className="text-sm text-red-500">{error}</p>
+        <p className="text-sm text-destructive">{error}</p>
       )}
 
       {estimate && estimate.available && (
-        <div className="flex items-start gap-2 text-sm text-green-600">
+        <div className="flex items-start gap-2 text-sm text-emerald-600 dark:text-emerald-400">
           <Check className="w-4 h-4 mt-0.5 flex-shrink-0" />
           <div>
             <p className="font-medium">
-              {estimate.cost === 0 ? 'FREE' : `$${estimate.cost.toFixed(2)}`} delivery by {estimate.date}
+              {estimate.cost === 0 ? 'FREE' : formatPrice(estimate.cost)} delivery by {formatDeliveryDate(estimate.date)}
             </p>
           </div>
         </div>

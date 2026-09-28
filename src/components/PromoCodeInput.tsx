@@ -4,41 +4,45 @@ import { useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Tag, Check, X } from 'lucide-react';
+import { findPromoCode, promoDiscount, type PromoCode } from '@/lib/promo-codes';
+import { formatPrice } from '@/lib/utils';
 
 interface PromoCodeInputProps {
-  onApply?: (discount: number) => void;
+  /**
+   * Reports the code that is in force, not a pre-computed amount: the cart
+   * owns the subtotal and re-derives the money with `promoDiscount`, so the
+   * discount follows quantity changes instead of freezing at apply time.
+   * `null` means no code is applied.
+   */
+  onApply?: (promo: PromoCode | null) => void;
+  /** Live merchandise subtotal, used only to show the saving next to the rate. */
+  subtotal?: number;
 }
 
-export function PromoCodeInput({ onApply }: PromoCodeInputProps) {
+export function PromoCodeInput({ onApply, subtotal = 0 }: PromoCodeInputProps) {
   const [code, setCode] = useState('');
-  const [applied, setApplied] = useState<{ code: string; discount: number } | null>(null);
+  const [applied, setApplied] = useState<PromoCode | null>(null);
   const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
 
-  const handleApply = async () => {
-    if (!code.trim()) return;
-    setLoading(true);
-    setError('');
+  // Derived from the live subtotal, so changing a quantity updates the saving.
+  const saving = promoDiscount(applied, subtotal);
 
-    await new Promise(resolve => setTimeout(resolve, 600));
-
-    if (code.toUpperCase() === 'SAVE20') {
-      setApplied({ code: code.toUpperCase(), discount: 20 });
-      onApply?.(20);
-    } else if (code.toUpperCase() === 'SAVE10') {
-      setApplied({ code: code.toUpperCase(), discount: 10 });
-      onApply?.(10);
-    } else {
-      setError('Invalid promo code');
+  const handleApply = () => {
+    const match = findPromoCode(code);
+    if (!match) {
+      setError('That promo code is not valid. Check the code and try again.');
+      return;
     }
-    setLoading(false);
+    setError('');
+    setApplied(match);
+    onApply?.(match);
   };
 
   const handleRemove = () => {
     setApplied(null);
     setCode('');
     setError('');
-    onApply?.(0);
+    onApply?.(null);
   };
 
   return (
@@ -49,37 +53,54 @@ export function PromoCodeInput({ onApply }: PromoCodeInputProps) {
       </div>
 
       {applied ? (
-        <div className="flex items-center justify-between p-3 bg-green-50 border border-green-200 rounded-lg">
+        <div
+          role="status"
+          className="flex items-center justify-between gap-2 p-3 bg-primary/10 border border-primary/20 rounded-lg"
+        >
           <div className="flex items-center gap-2">
-            <Check className="w-4 h-4 text-green-600" />
-            <span className="font-medium text-green-700">
-              {applied.code} applied (-${applied.discount})
+            <Check className="w-4 h-4 shrink-0 text-primary" aria-hidden="true" />
+            <span className="text-sm font-semibold tracking-tight text-foreground">
+              {applied.code} applied{' '}
+              <span className="text-primary-strong">(-{applied.percent}%)</span>
+              {saving > 0 && (
+                <span className="font-normal text-muted-foreground">
+                  {' '}
+                  saves {formatPrice(saving)}
+                </span>
+              )}
             </span>
           </div>
-          <Button variant="ghost" size="sm" onClick={handleRemove}>
-            <X className="w-4 h-4" />
+          <Button variant="ghost" size="sm" onClick={handleRemove} aria-label={`Remove promo code ${applied.code}`}>
+            <X className="w-4 h-4" aria-hidden="true" />
           </Button>
         </div>
       ) : (
-        <div className="flex gap-2">
+        <form
+          className="flex gap-2"
+          onSubmit={(event) => {
+            event.preventDefault();
+            if (code.trim()) handleApply();
+          }}
+        >
           <Input
             placeholder="Enter code"
             value={code}
             onChange={(e) => setCode(e.target.value.toUpperCase())}
             className="flex-1"
-            onKeyDown={(e) => e.key === 'Enter' && handleApply()}
+            aria-invalid={error ? true : undefined}
+            aria-describedby={error ? 'promo-code-error' : undefined}
           />
-          <Button
-            variant="secondary"
-            onClick={handleApply}
-            disabled={loading || !code.trim()}
-          >
-            {loading ? '...' : 'Apply'}
+          <Button type="submit" variant="secondary" disabled={!code.trim()}>
+            Apply
           </Button>
-        </div>
+        </form>
       )}
 
-      {error && <p className="text-sm text-red-500">{error}</p>}
+      {error && (
+        <p id="promo-code-error" role="alert" className="text-sm text-destructive">
+          {error}
+        </p>
+      )}
     </div>
   );
 }

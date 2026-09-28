@@ -4,6 +4,7 @@ import { X, Minus, Plus, ShoppingBag, Trash2 } from 'lucide-react';
 import Link from 'next/link';
 import { useCart } from '@/lib/cart-context';
 import { Button } from '@/components/ui/button';
+import { formatPrice } from '@/lib/utils';
 
 interface MiniCartProps {
   isOpen: boolean;
@@ -25,7 +26,7 @@ export function MiniCart({ isOpen, onClose }: MiniCartProps) {
       
       {/* Drawer */}
       <div 
-        className={`fixed top-0 right-0 h-full w-full max-w-md bg-white shadow-xl z-50 transform transition-transform duration-300 ${
+        className={`fixed top-0 right-0 h-full w-full max-w-md bg-card border-l border-border shadow-lg z-50 transform transition-transform duration-300 ${
           isOpen ? 'translate-x-0' : 'translate-x-full'
         }`}
       >
@@ -34,7 +35,7 @@ export function MiniCart({ isOpen, onClose }: MiniCartProps) {
           <div className="flex items-center justify-between p-4 border-b">
             <div className="flex items-center gap-2">
               <ShoppingBag className="w-5 h-5" />
-              <h2 className="font-semibold">Your Cart</h2>
+              <h2 className="font-semibold tracking-tight">Your Cart</h2>
               <span className="text-sm text-muted-foreground">({totalItems})</span>
             </div>
             <Button variant="ghost" size="icon" onClick={onClose}>
@@ -49,19 +50,19 @@ export function MiniCart({ isOpen, onClose }: MiniCartProps) {
                 <ShoppingBag className="w-16 h-16 text-muted-foreground mb-4" />
                 <p className="text-lg font-medium">Your cart is empty</p>
                 <p className="text-sm text-muted-foreground mt-1">Start shopping to add items</p>
-                <Link href="/products" onClick={onClose}>
-                  <Button className="mt-4">Browse Products</Button>
-                </Link>
+                <Button asChild className="mt-4" onClick={onClose}>
+                  <Link href="/products">Browse Products</Link>
+                </Button>
               </div>
             ) : (
               <div className="space-y-4">
                 {items.map((item) => (
                   <div key={item.productId} className="flex gap-4">
-                    <div className="w-20 h-20 bg-gray-100 rounded-lg flex items-center justify-center text-3xl">
+                    <div className="w-20 h-20 bg-muted rounded-lg flex items-center justify-center text-3xl">
                       {item.image}
                     </div>
                     <div className="flex-1">
-                      <h3 className="font-medium line-clamp-2">{item.name}</h3>
+                      <h3 className="text-sm font-medium tracking-tight line-clamp-2">{item.name}</h3>
                       {item.brand && (
                         <p className="text-sm text-muted-foreground">{item.brand}</p>
                       )}
@@ -71,25 +72,25 @@ export function MiniCart({ isOpen, onClose }: MiniCartProps) {
                             variant="outline"
                             size="icon"
                             className="h-8 w-8"
-                            onClick={() => updateQuantity(item.productId, item.quantity - 1)}
+                            onClick={() => updateQuantity(item.id, item.quantity - 1)}
                           >
                             <Minus className="w-4 h-4" />
                           </Button>
-                          <span className="w-8 text-center">{item.quantity}</span>
+                          <span className="w-8 text-center tabular-nums">{item.quantity}</span>
                           <Button
                             variant="outline"
                             size="icon"
                             className="h-8 w-8"
-                            onClick={() => updateQuantity(item.productId, item.quantity + 1)}
+                            onClick={() => updateQuantity(item.id, item.quantity + 1)}
                           >
                             <Plus className="w-4 h-4" />
                           </Button>
                         </div>
                         <div className="flex items-center gap-3">
-                          <span className="font-medium">${(item.price * item.quantity).toFixed(2)}</span>
+                          <span className="text-sm font-semibold tabular-nums">{formatPrice(item.price * item.quantity)}</span>
                           <button
-                            onClick={() => removeItem(item.productId)}
-                            className="text-muted-foreground hover:text-red-500"
+                            onClick={() => removeItem(item.id)}
+                            className="text-muted-foreground hover:text-destructive transition-colors duration-200 ease-out"
                           >
                             <Trash2 className="w-4 h-4" />
                           </button>
@@ -106,19 +107,19 @@ export function MiniCart({ isOpen, onClose }: MiniCartProps) {
           {items.length > 0 && (
             <div className="p-4 border-t">
               <div className="flex justify-between mb-4">
-                <span className="font-medium">Subtotal</span>
-                <span className="font-bold text-lg">${totalPrice.toFixed(2)}</span>
+                <span className="text-sm font-medium">Subtotal</span>
+                <span className="text-base font-semibold tabular-nums">{formatPrice(totalPrice)}</span>
               </div>
               <p className="text-sm text-muted-foreground mb-4">
                 Shipping and taxes calculated at checkout
               </p>
               <div className="space-y-2">
-                <Link href="/checkout" onClick={onClose}>
-                  <Button className="w-full">Checkout</Button>
-                </Link>
-                <Link href="/cart" onClick={onClose}>
-                  <Button variant="outline" className="w-full">View Cart</Button>
-                </Link>
+                <Button asChild className="w-full" onClick={onClose}>
+                  <Link href="/checkout">Checkout</Link>
+                </Button>
+                <Button asChild variant="outline" className="w-full" onClick={onClose}>
+                  <Link href="/cart">View Cart</Link>
+                </Button>
               </div>
             </div>
           )}

@@ -1,4 +1,3 @@
-export * from './product';
 export * from './shipping';
 export * from './cart';
 export * from './order';

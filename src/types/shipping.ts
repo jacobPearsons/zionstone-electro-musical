@@ -9,7 +9,7 @@ export interface ShippingMethod {
 export interface ShippingCalculation {
   zipCode: string;
   methods: ShippingMethod[];
-  estimatedDeliveryDates: Record<string, Date>;
+  estimatedDeliveryDates: Record<string, string>;
 }
 
 export type ShippingZone = 

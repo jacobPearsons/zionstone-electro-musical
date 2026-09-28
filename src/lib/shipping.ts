@@ -105,6 +105,24 @@ const ZONE_MAP: Record<string, ShippingZone> = {
 
 const TWO_DAY_ELIGIBLE_ZONES: ShippingZone[] = ['west-coast', 'southwest', 'mountain', 'midwest'];
 
+/**
+ * The one free-shipping promise in the store, in dollars.
+ *
+ * `src/app/layout.tsx` (announcement bar) and `src/app/cart/page.tsx` (the
+ * summary that gates the money) both read this, so a customer can never be
+ * shown two different thresholds. The threshold is measured against the
+ * merchandise subtotal *before* any promo code, so applying a discount never
+ * costs a customer the free shipping they were already promised.
+ */
+export const FREE_SHIPPING_THRESHOLD = 99;
+
+/** Charged when the cart is under `FREE_SHIPPING_THRESHOLD` and no method has been chosen. */
+export const STANDARD_SHIPPING_FALLBACK = 9.99;
+
+export function qualifiesForFreeShipping(merchandiseSubtotal: number): boolean {
+  return merchandiseSubtotal >= FREE_SHIPPING_THRESHOLD;
+}
+
 export const SHIPPING_METHODS: ShippingMethod[] = [
   {
     id: 'std',
@@ -187,10 +205,10 @@ export function calculateShipping(
     isTwoDayEligible: isEligible && method.isTwoDayEligible,
   }));
   
-  const estimatedDeliveryDates: Record<string, Date> = {};
-  
+  const estimatedDeliveryDates: Record<string, string> = {};
+
   for (const method of methods) {
-    estimatedDeliveryDates[method.id] = calculateDeliveryDate(shipsInDays, method.estimatedDays);
+    estimatedDeliveryDates[method.id] = calculateDeliveryDate(shipsInDays, method.estimatedDays).toISOString();
   }
   
   return {
@@ -200,12 +218,16 @@ export function calculateShipping(
   };
 }
 
-export function formatDeliveryDate(date: Date): string {
-  return date.toLocaleDateString('en-US', {
-    weekday: 'long',
-    month: 'short',
-    day: 'numeric',
-  });
+const DELIVERY_DATE_FORMAT = new Intl.DateTimeFormat('en-US', {
+  weekday: 'long',
+  month: 'short',
+  day: 'numeric',
+});
+
+/** Formats an ISO 8601 delivery-date string for display, e.g. `Wednesday, Mar 25`; returns `''` if unparseable. */
+export function formatDeliveryDate(isoDate: string): string {
+  const date = new Date(isoDate);
+  return Number.isNaN(date.getTime()) ? '' : DELIVERY_DATE_FORMAT.format(date);
 }
 
 export function getShippingBadgeText(shipsInDays: number, isTwoDayEligible: boolean): string {

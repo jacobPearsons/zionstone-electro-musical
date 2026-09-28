@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useCart } from '@/lib/cart-context';
+import { formatPrice } from '@/lib/utils';
 
 const orders = [
   { 
@@ -64,8 +65,8 @@ const orders = [
 ];
 
 const wishlist = [
-  { id: '1', name: 'Moog Subsequent 37', brand: 'Moog', price: 1599, emoji: '🎹' },
-  { id: '2', name: 'Universal Audio Apollo Twin X', brand: 'Universal Audio', price: 1299, emoji: '🎤' },
+  { id: '1', name: 'Moog Subsequent 37', brand: 'Moog', price: 1599, emoji: '🎹', slug: 'moog-subsequent-37' },
+  { id: '2', name: 'Universal Audio Apollo Twin X', brand: 'Universal Audio', price: 1299, emoji: '🎤', slug: 'ua-apollo-twin-x' },
 ];
 
 const addresses = [
@@ -81,51 +82,58 @@ const tabs = [
 ];
 
 export default function DashboardPage() {
-  const { user, isLoaded } = useUser();
+  const { user } = useUser();
   const [activeTab, setActiveTab] = useState('orders');
   const [expandedOrder, setExpandedOrder] = useState<string | null>(null);
   const { addItem } = useCart();
 
-  if (!isLoaded) {
-    return (
-      <div className="container mx-auto px-4 py-16 text-center">
-        <div className="animate-pulse">Loading...</div>
-      </div>
-    );
-  }
-
+  // There is no `isLoaded` branch here any more, and there was never a reason
+  // for one. Every value this page renders is a module constant, so there is no
+  // fetch to wait for, and Clerk hands the session to the client through the SSR
+  // state — `useUser()` is populated on the first client render, not a tick
+  // later. The `animate-pulse` "Loading..." that stood here was therefore a
+  // permanent fake loading state (spec §3.10, §5 "Segment loading"), and the
+  // skeleton the spec asked for would have been the same lie in a nicer frame:
+  // there is nothing to wait for. The single `!user` guard below is the real one,
+  // and it is the only state that is genuinely reachable.
   if (!user) {
     return (
       <div className="container mx-auto px-4 py-16 text-center">
-        <h1 className="text-2xl font-bold mb-4">Sign in required</h1>
+        <h1 className="text-2xl font-semibold tracking-tight mb-4">Sign in required</h1>
         <p className="text-muted-foreground mb-6">Please sign in to view your dashboard</p>
-        <Link href="/sign-in">
-          <Button>Sign In</Button>
-        </Link>
+        <Button asChild>
+          <Link href="/sign-in">Sign In</Link>
+        </Button>
       </div>
     );
   }
 
+  // The only gold left in this page's chrome is the gold that encodes something:
+  // the active tab, the `shipped` status glyph below, the current tracking step,
+  // and the "Default" address chip. The avatar well, the four stat chips and the
+  // address pin were `bg-primary/10` / `text-primary` and are now `bg-muted` /
+  // `text-foreground` / `text-muted-foreground` — four identical gold circles in
+  // one row are a pattern, not an accent (spec §3.10, §1 "spend gold once").
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case 'delivered': return <CheckCircle className="w-4 h-4 text-green-600" />;
-      case 'shipped': return <Truck className="w-4 h-4 text-blue-600" />;
-      case 'processing': return <Clock className="w-4 h-4 text-yellow-600" />;
-      case 'cancelled': return <XCircle className="w-4 h-4 text-red-600" />;
-      default: return <Clock className="w-4 h-4 text-gray-600" />;
+      case 'delivered': return <CheckCircle className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />;
+      case 'shipped': return <Truck className="w-4 h-4 text-primary" />;
+      case 'processing': return <Clock className="w-4 h-4 text-muted-foreground" />;
+      case 'cancelled': return <XCircle className="w-4 h-4 text-destructive" />;
+      default: return <Clock className="w-4 h-4 text-muted-foreground" />;
     }
   };
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="container mx-auto px-4 py-12 md:py-16">
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <div className="flex items-center gap-4">
-          <div className="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center">
-            <User className="w-8 h-8 text-yellow-600" />
+          <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center">
+            <User className="w-8 h-8 text-foreground" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold">Welcome back, {user.firstName || 'Musician'}!</h1>
+            <h1 className="text-2xl font-semibold tracking-tight">Welcome back, {user.firstName || 'Musician'}!</h1>
             <p className="text-muted-foreground">{user.emailAddresses[0]?.emailAddress}</p>
           </div>
         </div>
@@ -134,46 +142,46 @@ export default function DashboardPage() {
 
       {/* Quick Stats */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-        <div className="bg-white p-6 rounded-xl border shadow-sm">
+        <div className="rounded-card border border-border bg-card p-6 shadow-card">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-yellow-100 rounded-lg flex items-center justify-center">
-              <Package className="w-5 h-5 text-yellow-600" />
+            <div className="w-10 h-10 bg-muted rounded-card flex items-center justify-center">
+              <Package className="w-5 h-5 text-foreground" />
             </div>
             <div>
-              <p className="text-2xl font-bold">{orders.length}</p>
+              <p className="text-2xl font-semibold tabular-nums">{orders.length}</p>
               <p className="text-sm text-muted-foreground">Total Orders</p>
             </div>
           </div>
         </div>
-        <div className="bg-white p-6 rounded-xl border shadow-sm">
+        <div className="rounded-card border border-border bg-card p-6 shadow-card">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-pink-100 rounded-lg flex items-center justify-center">
-              <Heart className="w-5 h-5 text-pink-600" />
+            <div className="w-10 h-10 bg-muted rounded-card flex items-center justify-center">
+              <Heart className="w-5 h-5 text-foreground" />
             </div>
             <div>
-              <p className="text-2xl font-bold">{wishlist.length}</p>
+              <p className="text-2xl font-semibold tabular-nums">{wishlist.length}</p>
               <p className="text-sm text-muted-foreground">Wishlist Items</p>
             </div>
           </div>
         </div>
-        <div className="bg-white p-6 rounded-xl border shadow-sm">
+        <div className="rounded-card border border-border bg-card p-6 shadow-card">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
-              <Truck className="w-5 h-5 text-green-600" />
+            <div className="w-10 h-10 bg-muted rounded-card flex items-center justify-center">
+              <Truck className="w-5 h-5 text-foreground" />
             </div>
             <div>
-              <p className="text-2xl font-bold">1</p>
+              <p className="text-2xl font-semibold tabular-nums">1</p>
               <p className="text-sm text-muted-foreground">In Transit</p>
             </div>
           </div>
         </div>
-        <div className="bg-white p-6 rounded-xl border shadow-sm">
+        <div className="rounded-card border border-border bg-card p-6 shadow-card">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-              <MapPin className="w-5 h-5 text-blue-600" />
+            <div className="w-10 h-10 bg-muted rounded-card flex items-center justify-center">
+              <MapPin className="w-5 h-5 text-foreground" />
             </div>
             <div>
-              <p className="text-2xl font-bold">{addresses.length}</p>
+              <p className="text-2xl font-semibold tabular-nums">{addresses.length}</p>
               <p className="text-sm text-muted-foreground">Saved Addresses</p>
             </div>
           </div>
@@ -188,10 +196,10 @@ export default function DashboardPage() {
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg whitespace-nowrap transition-colors ${
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg whitespace-nowrap transition-colors duration-200 ease-out ${
                 activeTab === tab.id 
-                  ? 'bg-yellow-600 text-white' 
-                  : 'bg-gray-100 hover:bg-gray-200'
+                  ? 'bg-primary text-primary-foreground' 
+                  : 'bg-muted hover:bg-primary/10 hover:text-primary-strong'
               }`}
             >
               <Icon className="w-4 h-4" />
@@ -202,23 +210,23 @@ export default function DashboardPage() {
       </div>
 
       {/* Tab Content */}
-      <div className="bg-white rounded-xl border shadow-sm p-6">
+      <div className="rounded-card border border-border bg-card p-6">
         {/* Orders Tab */}
         {activeTab === 'orders' && (
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <h2 className="text-lg font-semibold">Order History</h2>
+              <h2 className="text-lg font-semibold tracking-tight">Order History</h2>
               <Button variant="outline" size="sm">View All</Button>
             </div>
             {orders.map((order) => (
-              <div key={order.id} className="border rounded-lg overflow-hidden">
+              <div key={order.id} className="rounded-card border border-border overflow-hidden">
                 <div 
-                  className="flex items-center justify-between p-4 hover:bg-gray-50 cursor-pointer"
+                  className="flex items-center justify-between p-4 cursor-pointer transition-colors duration-200 ease-out hover:bg-muted"
                   onClick={() => setExpandedOrder(expandedOrder === order.id ? null : order.id)}
                 >
                   <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
-                      <Music className="w-6 h-6 text-gray-500" />
+                    <div className="w-12 h-12 bg-muted rounded-card flex items-center justify-center">
+                      <Music className="w-6 h-6 text-muted-foreground" />
                     </div>
                     <div>
                       <p className="font-medium">{order.id}</p>
@@ -227,35 +235,35 @@ export default function DashboardPage() {
                   </div>
                   <div className="flex items-center gap-4">
                     <div className="text-right">
-                      <p className="font-semibold">${order.total.toFixed(2)}</p>
+                      <p className="font-semibold tabular-nums">{formatPrice(order.total)}</p>
                       <div className="flex items-center gap-1 text-sm">
                         {getStatusIcon(order.status)}
                         <span className="capitalize">{order.status}</span>
                       </div>
                     </div>
-                    <ChevronRight className={`w-5 h-5 text-gray-400 transition-transform ${expandedOrder === order.id ? 'rotate-90' : ''}`} />
+                    <ChevronRight className={`w-5 h-5 text-muted-foreground transition-transform duration-200 ease-out ${expandedOrder === order.id ? 'rotate-90' : ''}`} />
                   </div>
                 </div>
                 
                 {/* Expanded Order Tracking */}
                 {expandedOrder === order.id && (
-                  <div className="border-t p-4 bg-gray-50">
+                  <div className="border-t border-border p-4 bg-muted">
                     {/* Tracking Progress */}
                     <div className="mb-4">
-                      <h4 className="font-medium mb-3">Order Tracking</h4>
+                      <h4 className="font-medium tracking-tight mb-3">Order Tracking</h4>
                       <div className="relative">
                         <div className="flex justify-between mb-2">
                           {order.trackingSteps.map((step, idx) => (
                             <div key={idx} className="flex flex-col items-center flex-1">
-                              <div className={`w-3 h-3 rounded-full ${step.completed ? 'bg-green-500' : step.current ? 'bg-blue-500' : 'bg-gray-300'}`} />
+                              <div className={`w-3 h-3 rounded-full ${step.completed ? 'bg-emerald-500' : step.current ? 'bg-primary' : 'bg-border'}`} />
                               <span className="text-xs mt-1 text-center">{step.label}</span>
                               {step.date && <span className="text-[10px] text-muted-foreground">{step.date}</span>}
                             </div>
                           ))}
                         </div>
-                        <div className="absolute top-1.5 left-0 right-0 h-0.5 bg-gray-200 -z-10">
+                        <div className="absolute top-1.5 left-0 right-0 h-0.5 bg-border -z-10">
                           <div 
-                            className="h-full bg-green-500 transition-all"
+                            className="h-full bg-emerald-500 transition-all"
                             style={{ 
                               width: `${(order.trackingSteps.filter(s => s.completed).length / (order.trackingSteps.length - 1)) * 100}%` 
                             }} 
@@ -296,21 +304,21 @@ export default function DashboardPage() {
         {activeTab === 'wishlist' && (
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <h2 className="text-lg font-semibold">Your Wishlist</h2>
-              <Link href="/products">
-                <Button variant="outline" size="sm">Browse More</Button>
-              </Link>
+              <h2 className="text-lg font-semibold tracking-tight">Your Wishlist</h2>
+              <Button asChild variant="outline" size="sm">
+                <Link href="/products">Browse More</Link>
+              </Button>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {wishlist.map((item) => (
-                <div key={item.id} className="flex items-center gap-4 p-4 border rounded-lg hover:bg-gray-50">
-                  <div className="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center text-3xl">
+                <div key={item.id} className="flex items-center gap-4 rounded-card border border-border bg-card p-4 transition-colors duration-200 ease-out hover:bg-muted">
+                  <div className="w-16 h-16 bg-muted rounded-card flex items-center justify-center text-3xl">
                     {item.emoji}
                   </div>
                   <div className="flex-1">
-                    <p className="text-sm text-muted-foreground">{item.brand}</p>
-                    <p className="font-medium">{item.name}</p>
-                    <p className="font-bold text-yellow-600">${item.price}</p>
+                    <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">{item.brand}</p>
+                    <p className="text-sm font-medium">{item.name}</p>
+                    <p className="font-semibold tabular-nums text-primary-strong">{formatPrice(item.price)}</p>
                   </div>
                   <div className="flex flex-col gap-2">
                     <Button 
@@ -318,6 +326,7 @@ export default function DashboardPage() {
                       onClick={() => {
                         addItem({
                           productId: item.id,
+                          slug: item.slug,
                           name: item.name,
                           price: item.price,
                           quantity: 1,
@@ -330,7 +339,7 @@ export default function DashboardPage() {
                       <ShoppingCart className="w-4 h-4 mr-2" />
                       Add to Cart
                     </Button>
-                    <Button variant="ghost" size="sm" className="text-red-500 hover:text-red-600 hover:bg-red-50">
+                    <Button variant="ghost" size="sm" className="text-destructive transition-colors duration-200 ease-out hover:bg-destructive/10">
                       <Trash2 className="w-4 h-4" />
                     </Button>
                   </div>
@@ -344,17 +353,17 @@ export default function DashboardPage() {
         {activeTab === 'addresses' && (
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <h2 className="text-lg font-semibold">Saved Addresses</h2>
+              <h2 className="text-lg font-semibold tracking-tight">Saved Addresses</h2>
               <Button variant="outline" size="sm">Add New</Button>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {addresses.map((addr) => (
-                <div key={addr.id} className="p-4 border rounded-lg hover:bg-gray-50">
+                <div key={addr.id} className="rounded-card border border-border bg-card p-4 transition-colors duration-200 ease-out hover:bg-muted">
                   <div className="flex items-center gap-2 mb-2">
-                    <MapPin className="w-4 h-4 text-yellow-600" />
+                    <MapPin className="w-4 h-4 text-muted-foreground" />
                     <span className="font-medium">{addr.name}</span>
                     {addr.default && (
-                      <span className="text-xs bg-yellow-100 text-yellow-700 px-2 py-0.5 rounded">Default</span>
+                      <span className="text-xs font-medium bg-primary/10 text-primary-strong px-2 py-0.5 rounded-full">Default</span>
                     )}
                   </div>
                   <p className="text-sm text-muted-foreground">{addr.address}</p>
@@ -373,18 +382,18 @@ export default function DashboardPage() {
         {/* Settings Tab */}
         {activeTab === 'settings' && (
           <div className="space-y-6">
-            <h2 className="text-lg font-semibold">Account Settings</h2>
+            <h2 className="text-lg font-semibold tracking-tight">Account Settings</h2>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-4">
-                <h3 className="font-medium">Profile Information</h3>
+                <h3 className="font-medium tracking-tight">Profile Information</h3>
                 <div className="space-y-3">
                   <div>
                     <label className="text-sm text-muted-foreground">First Name</label>
                     <input 
                       type="text" 
                       defaultValue={user.firstName || ''}
-                      className="w-full p-2 border rounded-lg"
+                      className="w-full p-2 rounded-card border border-input bg-background"
                     />
                   </div>
                   <div>
@@ -392,7 +401,7 @@ export default function DashboardPage() {
                     <input 
                       type="text" 
                       defaultValue={user.lastName || ''}
-                      className="w-full p-2 border rounded-lg"
+                      className="w-full p-2 rounded-card border border-input bg-background"
                     />
                   </div>
                   <div>
@@ -400,7 +409,7 @@ export default function DashboardPage() {
                     <input 
                       type="email" 
                       defaultValue={user.emailAddresses[0]?.emailAddress}
-                      className="w-full p-2 border rounded-lg"
+                      className="w-full p-2 rounded-card border border-input bg-background"
                       disabled
                     />
                   </div>
@@ -409,22 +418,22 @@ export default function DashboardPage() {
               </div>
 
               <div className="space-y-4">
-                <h3 className="font-medium">Notifications</h3>
+                <h3 className="font-medium tracking-tight">Notifications</h3>
                 <div className="space-y-3">
                   <label className="flex items-center gap-3">
-                    <input type="checkbox" defaultChecked className="w-4 h-4" />
+                    <input type="checkbox" defaultChecked className="w-4 h-4 accent-primary" />
                     <span className="text-sm">Order updates via email</span>
                   </label>
                   <label className="flex items-center gap-3">
-                    <input type="checkbox" defaultChecked className="w-4 h-4" />
+                    <input type="checkbox" defaultChecked className="w-4 h-4 accent-primary" />
                     <span className="text-sm">Promotions and deals</span>
                   </label>
                   <label className="flex items-center gap-3">
-                    <input type="checkbox" className="w-4 h-4" />
+                    <input type="checkbox" className="w-4 h-4 accent-primary" />
                     <span className="text-sm">Price drop alerts</span>
                   </label>
                   <label className="flex items-center gap-3">
-                    <input type="checkbox" className="w-4 h-4" />
+                    <input type="checkbox" className="w-4 h-4 accent-primary" />
                     <span className="text-sm">New product announcements</span>
                   </label>
                 </div>
@@ -432,8 +441,8 @@ export default function DashboardPage() {
               </div>
             </div>
 
-            <div className="border-t pt-6">
-              <h3 className="font-medium text-red-600 mb-3">Danger Zone</h3>
+            <div className="border-t border-border pt-6">
+              <h3 className="font-medium tracking-tight text-destructive mb-3">Danger Zone</h3>
               <Button variant="destructive">Delete Account</Button>
             </div>
           </div>

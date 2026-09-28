@@ -10,21 +10,33 @@
     --card-foreground: 222.2 84% 4.9%;
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
-    /* Brand Colors: Primary Gold #b18348, Secondary Brown #382a27 */
+    /* Brand gold: hsl(36 42% 49%) = #b18748 (lifts to #c69853 in .dark).
+       This token is the ONLY source of brand gold. There is deliberately no
+       numeric ramp — tints come from opacity modifiers (primary/10, primary/80). */
     --primary: 36 42% 49%;
-    --primary-foreground: 0 0% 100%;
+    --primary-foreground: 36 26% 10%;
+    /* WCAG two-tier accent. --primary (#b18748) is only 3.27:1 on white, so it
+       is for LARGE text, icons, borders and tints. --primary-strong (#7f5f2f)
+       is 5.87:1 on white / 5.17:1 on muted — use it for body-size accent text. */
+    --primary-strong: 36 46% 34%;
+    /* Brand brown: hsl(10 26% 15%) = #30201c (lifts to #422924 in .dark). */
     --secondary: 10 26% 15%;
     --secondary-foreground: 0 0% 100%;
     --muted: 36 20% 94%;
     --muted-foreground: 215.4 16.3% 46.9%;
     --accent: 36 42% 49%;
-    --accent-foreground: 0 0% 100%;
+    --accent-foreground: 36 26% 10%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
     --ring: 36 42% 49%;
     --radius: 0.5rem;
+    /* Typography scale: display sizes tighten (Apple DNA — large type needs
+       negative tracking or it reads as cheap); eyebrows widen. Consumed by
+       theme.extend.letterSpacing in tailwind.config.ts. */
+    --tracking-tight: -0.02em;
+    --tracking-wider: 0.05em;
   }
 
   .dark {
@@ -34,29 +46,42 @@
     --card-foreground: 210 40% 98%;
     --popover: 222.2 84% 4.9%;
     --popover-foreground: 210 40% 98%;
-    /* Brand Colors - lighter in dark mode */
+    /* Same hue, lifted for contrast on the dark surface. */
     --primary: 36 50% 55%;
-    --primary-foreground: 0 0% 100%;
+    --primary-foreground: 36 26% 10%;
+    /* Inverted direction: on a dark canvas "strong" means LIGHTER, not darker. */
+    --primary-strong: 38 60% 66%;
     --secondary: 10 30% 20%;
     --secondary-foreground: 0 0% 100%;
     --muted: 217.2 32.6% 17.5%;
     --muted-foreground: 215 20.2% 65.1%;
     --accent: 36 50% 55%;
-    --accent-foreground: 0 0% 100%;
+    --accent-foreground: 36 26% 10%;
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 210 40% 98%;
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
     --ring: 36 50% 55%;
   }
-}
 
-@layer base {
   * {
     @apply border-border;
   }
   body {
     @apply bg-background text-foreground;
+  }
+
+  /* Keyboard focus must be visible everywhere (WCAG 2.4.7). Built on --ring so
+     it follows the brand gold and flips with .dark. Uses `outline` rather than a
+     box-shadow ring so the `shadow-*` utilities used on cards cannot erase it. */
+  :focus-visible {
+    outline: 2px solid hsl(var(--ring));
+    outline-offset: 2px;
+  }
+
+  ::selection {
+    background-color: hsl(var(--primary));
+    color: hsl(var(--primary-foreground));
   }
 }
 
@@ -76,4 +101,20 @@
 }
 .scrollbar-hide::-webkit-scrollbar {
   display: none;
+}
+
+/* Reduced motion. `!important` is load-bearing, not defensive: the `*` selector
+   has zero specificity, so .animate-marquee (a class) and every `duration-*` /
+   `animate-*` utility outrank it on specificity alone — and Tailwind v3 emits
+   some utilities after this block, so source order is not a reliable lever.
+   Kept last anyway so it also outranks any other unlayered custom CSS. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

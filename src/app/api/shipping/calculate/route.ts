@@ -14,22 +14,10 @@ export async function POST(request: NextRequest) {
     }
     
     const result = calculateShipping(zipCode, shipsInDays || 2);
-    
+
     return NextResponse.json({
       success: true,
-      data: {
-        zipCode: result.zipCode,
-        methods: result.methods.map(method => ({
-          id: method.id,
-          name: method.name,
-          price: method.price,
-          estimatedDays: method.estimatedDays,
-          isTwoDayEligible: method.isTwoDayEligible,
-        })),
-        estimatedDeliveryDates: Object.fromEntries(
-          Object.entries(result.estimatedDeliveryDates).map(([key, value]) => [key, value.toISOString()])
-        ),
-      },
+      data: result,
     });
   } catch (error) {
     return NextResponse.json(

@@ -1,9 +1,11 @@
 "use client";
 
-import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from "react";
+import { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import { readStoredArray } from "@/lib/utils";
 
 export interface CartItem {
   id: string;
+  /** Product identity: `Product.id`, never the slug — `slug` is only for building links. */
   productId: string;
   name: string;
   price: number;
@@ -21,62 +23,37 @@ interface CartContextType {
   clearCart: () => void;
   totalItems: number;
   totalPrice: number;
-  playAddSound: () => void;
-  isPlaying: boolean;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
-// Generate a pleasant "add to cart" sound using Web Audio API
-function createAddToCartSound(): () => void {
-  let audioContext: AudioContext | null = null;
-  
-  return () => {
-    try {
-      if (!audioContext) {
-        audioContext = new (window.AudioContext || (window as typeof window & { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
-      }
-      
-      const oscillator = audioContext.createOscillator();
-      const gainNode = audioContext.createGain();
-      
-      oscillator.connect(gainNode);
-      gainNode.connect(audioContext.destination);
-      
-      oscillator.frequency.setValueAtTime(587.33, audioContext.currentTime); // D5 note
-      oscillator.frequency.setValueAtTime(783.99, audioContext.currentTime + 0.1); // G5 note
-      
-      gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
-      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
-      
-      oscillator.start(audioContext.currentTime);
-      oscillator.stop(audioContext.currentTime + 0.3);
-    } catch (e) {
-      console.warn("Audio not supported");
-    }
-  };
+function isCartItem(value: unknown): value is CartItem {
+  if (typeof value !== "object" || value === null) return false;
+  return (
+    "id" in value && typeof value.id === "string" &&
+    "productId" in value && typeof value.productId === "string" &&
+    "name" in value && typeof value.name === "string" &&
+    "image" in value && typeof value.image === "string" &&
+    "price" in value && typeof value.price === "number" && Number.isFinite(value.price) &&
+    "quantity" in value && typeof value.quantity === "number" && Number.isFinite(value.quantity) &&
+    (!("slug" in value) || value.slug === undefined || typeof value.slug === "string") &&
+    (!("brand" in value) || value.brand === undefined || typeof value.brand === "string")
+  );
 }
 
 export function CartProvider({ children }: { children: ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([]);
-  const [isPlaying, setIsPlaying] = useState(false);
-  const playAddSound = useCallback(() => {
-    const soundFn = createAddToCartSound();
-    soundFn();
-    setIsPlaying(true);
-    setTimeout(() => setIsPlaying(false), 300);
+  const [hydrated, setHydrated] = useState(false);
+
+  useEffect(() => {
+    setItems(readStoredArray<CartItem>("cart", isCartItem));
+    setHydrated(true);
   }, []);
 
   useEffect(() => {
-    const saved = localStorage.getItem("cart");
-    if (saved) {
-      setItems(JSON.parse(saved));
-    }
-  }, []);
-
-  useEffect(() => {
+    if (!hydrated) return;
     localStorage.setItem("cart", JSON.stringify(items));
-  }, [items]);
+  }, [items, hydrated]);
 
   const addItem = (item: Omit<CartItem, "id">) => {
     setItems((prev) => {
@@ -88,7 +65,6 @@ export function CartProvider({ children }: { children: ReactNode }) {
       }
       return [...prev, { ...item, id: `${item.productId}-${Date.now()}` }];
     });
-    playAddSound();
   };
 
   const removeItem = (id: string) => {
@@ -109,7 +85,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const totalPrice = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
   return (
-    <CartContext.Provider value={{ items, addItem, removeItem, updateQuantity, clearCart, totalItems, totalPrice, playAddSound, isPlaying }}>
+    <CartContext.Provider value={{ items, addItem, removeItem, updateQuantity, clearCart, totalItems, totalPrice }}>
       {children}
     </CartContext.Provider>
   );

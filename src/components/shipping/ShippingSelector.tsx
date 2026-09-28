@@ -3,10 +3,11 @@
 import { Truck, Zap, Rocket } from 'lucide-react';
 import type { ShippingMethod } from '@/types/shipping';
 import { formatDeliveryDate } from '@/lib/shipping';
+import { formatPrice } from '@/lib/utils';
 
 interface ShippingSelectorProps {
   methods: ShippingMethod[];
-  estimatedDeliveryDates: Record<string, Date>;
+  estimatedDeliveryDates: Record<string, string>;
   selectedMethodId: string;
   onSelect: (method: ShippingMethod) => void;
   className?: string;
@@ -27,7 +28,7 @@ export function ShippingSelector({
 }: ShippingSelectorProps) {
   return (
     <div className={`space-y-3 ${className}`}>
-      <h3 className="text-sm font-medium text-white">Shipping Method</h3>
+      <h3 className="text-sm font-medium text-foreground">Shipping Method</h3>
       
       {methods.map((method) => {
         const Icon = METHOD_ICONS[method.id] || Truck;
@@ -40,7 +41,7 @@ export function ShippingSelector({
             className={`relative flex items-start gap-3 p-4 border rounded-lg cursor-pointer transition-colors ${
               isSelected
                 ? 'border-primary bg-primary/5 ring-1 ring-primary'
-                : 'border-gray-200 hover:border-gray-300'
+                : 'border-border hover:border-foreground/20'
             }`}
           >
             <input
@@ -53,7 +54,7 @@ export function ShippingSelector({
             />
             
             <div className={`flex-shrink-0 w-5 h-5 rounded-full border-2 flex items-center justify-center ${
-              isSelected ? 'border-primary' : 'border-gray-300'
+              isSelected ? 'border-primary' : 'border-foreground/30'
             }`}>
               {isSelected && (
                 <div className="w-2.5 h-2.5 rounded-full bg-primary" />
@@ -62,24 +63,24 @@ export function ShippingSelector({
             
             <div className="flex-1">
               <div className="flex items-center gap-2">
-                <Icon className="w-4 h-4 text-white" />
-                <span className="font-medium text-white">{method.name}</span>
+                <Icon className="w-4 h-4 text-muted-foreground" />
+                <span className="font-medium text-foreground">{method.name}</span>
                 {method.isTwoDayEligible && (
-                  <span className="text-xs px-1.5 py-0.5 bg-green-100 text-green-700 rounded">
+                  <span className="text-xs px-1.5 py-0.5 bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200 rounded">
                     2-Day
                   </span>
                 )}
               </div>
               
               {deliveryDate && (
-                <p className="text-sm text-white mt-1">
+                <p className="text-sm text-muted-foreground mt-1">
                   Arrives by {formatDeliveryDate(deliveryDate)}
                 </p>
               )}
             </div>
             
-            <span className="text-sm font-semibold text-white">
-              ${method.price.toFixed(2)}
+            <span className="text-sm font-semibold text-foreground">
+              {formatPrice(method.price)}
             </span>
           </label>
         );

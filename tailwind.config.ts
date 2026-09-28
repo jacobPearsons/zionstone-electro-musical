@@ -15,33 +15,19 @@ const config: Config = {
         ring: "hsl(var(--ring))",
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
+        /* Brand colours are DEFAULT-only. The numeric primary/secondary ramps
+           were deleted: they disagreed with the --primary / --secondary tokens
+           (#b18348 vs #b18748), which is what let hardcoded yellow and purple
+           classes bypass the token. Get tints with opacity modifiers instead:
+           primary/10, primary/80. */
         primary: {
           DEFAULT: "hsl(var(--primary))",
           foreground: "hsl(var(--primary-foreground))",
-          50: "#faf6f1",
-          100: "#f5ede3",
-          200: "#ebdcc6",
-          300: "#e0c9a6",
-          400: "#d4b185",
-          500: "#c99a69", // Base brand color
-          600: "#b18348", // Brand primary
-          700: "#9a6f3a",
-          800: "#7d5a33",
-          900: "#61462a",
+          strong: "hsl(var(--primary-strong))",
         },
         secondary: {
           DEFAULT: "hsl(var(--secondary))",
           foreground: "hsl(var(--secondary-foreground))",
-          50: "#f5f2f1",
-          100: "#ebe5e3",
-          200: "#d7cbc7",
-          300: "#c2b1a8",
-          400: "#a68f7e",
-          500: "#8a6d5a",
-          600: "#6e523b",
-          700: "#563c2e",
-          800: "#382a27", // Brand secondary
-          900: "#1f1815",
         },
         destructive: {
           DEFAULT: "hsl(var(--destructive))",
@@ -64,10 +50,32 @@ const config: Config = {
           foreground: "hsl(var(--card-foreground))",
         },
       },
+      fontFamily: {
+        sans: ["var(--font-inter)", "system-ui", "sans-serif"],
+        display: ["var(--font-inter)", "system-ui", "sans-serif"],
+      },
+      letterSpacing: {
+        tight: "var(--tracking-tight)",
+        wider: "var(--tracking-wider)",
+      },
       borderRadius: {
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
+        card: "1rem",
+        pill: "9999px",
+      },
+      boxShadow: {
+        /* Chrome stays flat; these two are the sanctioned elevation, and
+           card-hover is for interactive cards only (never resting chrome). */
+        card: "0 1px 3px 0 rgb(0 0 0 / 0.06), 0 1px 2px -1px rgb(0 0 0 / 0.06)",
+        "card-hover": "0 10px 15px -3px rgb(0 0 0 / 0.08), 0 4px 6px -4px rgb(0 0 0 / 0.06)",
+      },
+      transitionTimingFunction: {
+        out: "cubic-bezier(0.16, 1, 0.3, 1)",
+      },
+      maxWidth: {
+        prose: "65ch",
       },
     },
   },

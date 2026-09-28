@@ -62,37 +62,37 @@ export function SearchBar() {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search instruments, gear..."
-            className="w-full pl-10 pr-10 py-2 border rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-purple-500"
+            className="h-10 w-full rounded-full border border-input bg-background pl-10 pr-10 text-sm text-foreground placeholder:text-muted-foreground transition-colors focus:ring-2 focus:ring-ring"
           />
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           {query ? (
             <button 
               type="button"
               onClick={() => { setQuery(''); setIsOpen(false); }}
-              className="absolute right-3 top-1/2 -translate-y-1/2 p-1 hover:bg-gray-100 rounded"
+              className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full p-1 text-muted-foreground transition-colors duration-150 hover:bg-muted hover:text-foreground"
               aria-label="Clear"
             >
-              <X className="w-4 h-4 text-muted-foreground" />
+              <X className="w-4 h-4" />
             </button>
           ) : (
             <button 
               type="button"
-              className="absolute right-3 top-1/2 -translate-y-1/2 p-1 hover:bg-gray-100 rounded"
+              className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full p-1 text-muted-foreground transition-colors duration-150 hover:bg-muted hover:text-foreground"
               aria-label="Voice search"
             >
-              <Mic className="w-4 h-4 text-muted-foreground" />
+              <Mic className="w-4 h-4" />
             </button>
           )}
         </div>
       </form>
       
       {isOpen && results.length > 0 && (
-        <div className="absolute top-full left-0 right-0 mt-2 bg-white border rounded-lg shadow-lg z-50 max-h-60 overflow-auto">
+        <div className="absolute top-full left-0 right-0 z-50 mt-2 max-h-60 overflow-auto rounded-2xl border border-border bg-popover text-popover-foreground">
           {results.map((result) => (
             <button
               key={result.slug}
               onClick={() => handleSelect(result.slug)}
-              className="w-full px-4 py-3 text-left hover:bg-yellow-50 flex items-center justify-between border-b last:border-b-0"
+              className="flex w-full items-center justify-between border-b border-border px-4 py-3 text-left text-sm transition-colors duration-150 last:border-b-0 hover:bg-primary/10"
             >
               <span className="font-medium">{result.name}</span>
               <span className="text-xs text-muted-foreground">{result.category}</span>

@@ -1,78 +1,43 @@
 'use client';
 
 import Link from 'next/link';
-import { ChevronRight } from 'lucide-react';
-
-const menuCategories = [
-  {
-    name: 'Guitars & Basses',
-    href: '/products?category=guitars-basses',
-    items: ['Electric Guitars', 'Acoustic Guitars', 'Bass Guitars', 'Guitar Packages'],
-    brands: ['Fender', 'Gibson', 'Ibanez', 'PRS'],
-  },
-  {
-    name: 'Keyboards & Synths',
-    href: '/products?category=keyboards-synths',
-    items: ['Digital Pianos', 'Synthesizers', 'MIDI Controllers', 'Workstations'],
-    brands: ['Yamaha', 'Roland', 'Korg', 'Nord'],
-  },
-  {
-    name: 'Recording Gear',
-    href: '/products?category=recording-gear',
-    items: ['Audio Interfaces', 'Microphones', 'Studio Monitors', 'Preamps'],
-    brands: ['Focusrite', 'Shure', 'Mackie', 'Audio-Technica'],
-  },
-  {
-    name: 'Drums & Percussion',
-    href: '/products?category=drums-percussion',
-    items: ['Electronic Drums', 'Acoustic Drums', 'Cymbals', 'Hardware'],
-    brands: ['Roland', 'Yamaha', 'Pearl', 'Zildjian'],
-  },
-];
+import { CATEGORIES, brandsInCategory } from '@/data/categories';
 
 export function MegaMenu() {
   return (
-    <div className="absolute top-full left-0 w-full bg-white border shadow-xl z-40 hidden group-hover:block animate-in fade-in slide-in-from-top-2 duration-200">
+    <div className="absolute top-full left-0 w-full z-40 hidden border-b border-border bg-popover text-popover-foreground group-hover:block animate-in fade-in slide-in-from-top-2 duration-200">
       <div className="container mx-auto px-4 py-8">
-        <div className="grid grid-cols-4 gap-8">
-          {menuCategories.map((category) => (
-            <div key={category.name}>
-              <Link 
-                href={category.href}
-                className="font-semibold text-yellow-600 mb-3 hover:text-yellow-700 block"
-              >
-                {category.name}
-              </Link>
-              <ul className="space-y-2">
-                {category.items.map((item) => (
-                  <li key={item}>
-                    <Link 
-                      href={`${category.href}`}
-                      className="text-sm text-muted-foreground hover:text-primary flex items-center gap-1"
-                    >
-                      <ChevronRight className="w-3 h-3 opacity-50" />
-                      {item}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-              <div className="mt-4 pt-4 border-t">
-                <p className="text-xs text-muted-foreground mb-2">Top Brands</p>
-                <div className="flex flex-wrap gap-2">
-                  {category.brands.map((brand) => (
-                    <Link
-                      key={brand}
-                      href={`/products?brand=${brand}`}
-                      className="text-xs bg-gray-100 px-2 py-1 rounded hover:bg-gray-200 transition-colors"
-                    >
-                      {brand}
-                    </Link>
-                  ))}
-                </div>
+        <nav aria-label="Product categories" className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
+          {CATEGORIES.map(category => {
+            const brands = brandsInCategory(category.slug);
+            return (
+              <div key={category.slug}>
+                <Link
+                  href={category.href}
+                  className="block text-sm font-semibold tracking-tight text-primary-strong transition-colors duration-150 hover:text-primary-strong/80 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                >
+                  {category.name}
+                </Link>
+                <p className="mt-1 text-xs tabular-nums text-muted-foreground">
+                  {category.count} {category.count === 1 ? 'product' : 'products'}
+                </p>
+                {category.description && (
+                  <p className="mt-2 text-xs text-muted-foreground">{category.description}</p>
+                )}
+                {brands.length > 0 && (
+                  <div className="mt-3 border-t border-border pt-3">
+                    <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                      Brands stocked
+                    </p>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      {brands.map(brand => brand.name).join(', ')}
+                    </p>
+                  </div>
+                )}
               </div>
-            </div>
-          ))}
-        </div>
+            );
+          })}
+        </nav>
       </div>
     </div>
   );

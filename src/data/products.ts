@@ -38,7 +38,7 @@ export const products: Product[] = [
     originalPrice: 999,
     category: "guitars-basses",
     slug: "fender-stratocaster-player",
-    emoji: "./images/r1.png",
+    emoji: "🎸",
     shipsInDays: 2,
     twoDayEligible: true,
     rating: 4.8,
@@ -430,6 +430,33 @@ export const products: Product[] = [
 
 export function getProductBySlug(slug: string): Product | undefined {
   return products.find(p => p.slug === slug);
+}
+
+/** A product is on sale only when a higher originalPrice is actually recorded. */
+export function isOnSale(product: Product): boolean {
+  return typeof product.originalPrice === 'number' && product.originalPrice > product.price;
+}
+
+export function getSaleProducts(): Product[] {
+  return products.filter(isOnSale);
+}
+
+/** Whole-number percentage off, or null when the product is not discounted. */
+export function discountPercent(product: Product): number | null {
+  if (!isOnSale(product)) return null;
+  return Math.round((1 - product.price / (product.originalPrice as number)) * 100);
+}
+
+/**
+ * The deepest real cut across the whole catalogue, as a whole number.
+ *
+ * Marketing copy that says "up to N% off" must be a storewide claim, so this
+ * reduces over every product rather than over a display slice. The hero badge
+ * and the home deals band both read this, so a hand-typed percentage cannot
+ * drift from the price data in two places at once. 0 means nothing is on sale.
+ */
+export function maxDiscountPercent(): number {
+  return products.reduce((max, product) => Math.max(max, discountPercent(product) ?? 0), 0);
 }
 
 export function getProductsByCategory(category: string): Product[] {

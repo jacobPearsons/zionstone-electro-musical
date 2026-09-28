@@ -1,61 +1,83 @@
 import Link from "next/link";
 import Image from "next/image";
+import { SignedIn, SignedOut } from "@clerk/nextjs";
 import { Newsletter } from "./Newsletter";
+import { CATEGORIES } from "@/data/categories";
+
+const linkClass =
+  "text-muted-foreground transition-colors duration-150 hover:text-primary-strong/80 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background";
+
+const columnLabel = "mb-4 text-xs font-medium uppercase tracking-wider text-muted-foreground";
 
 export function Footer() {
   return (
-    <footer className="border-t bg-background">
+    <footer className="border-t border-border bg-background">
       <div className="container mx-auto px-4 py-12">
         {/* Newsletter */}
         <div className="mb-12">
           <Newsletter />
         </div>
-        
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-          {/* Shop */}
-          <div>
-            <h3 className="font-semibold mb-4">Shop</h3>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
+          {/* Shop — every entry is a real route, and every category link uses a
+              slug that has products behind it. */}
+          <nav aria-label="Shop">
+            <h2 className={columnLabel}>Shop</h2>
             <ul className="space-y-2 text-sm">
-              <li><Link href="/products" className="text-muted-foreground hover:text-primary">All Products</Link></li>
-              <li><Link href="/products?category=guitars-basses" className="text-muted-foreground hover:text-primary">Guitars & Basses</Link></li>
-              <li><Link href="/products?category=keyboards-synths" className="text-muted-foreground hover:text-primary">Keyboards & Synths</Link></li>
-              <li><Link href="/products?category=recording-gear" className="text-muted-foreground hover:text-primary">Recording Gear</Link></li>
-              <li><Link href="/products?category=drums-percussion" className="text-muted-foreground hover:text-primary">Drums & Percussion</Link></li>
+              <li>
+                <Link href="/products" className={linkClass}>
+                  All Products
+                </Link>
+              </li>
+              {CATEGORIES.map((category) => (
+                <li key={category.slug}>
+                  <Link href={category.href} className={linkClass}>
+                    {category.name}
+                  </Link>
+                </li>
+              ))}
+              <li>
+                <Link href="/products?sale=true" className={linkClass}>
+                  Sale
+                </Link>
+              </li>
             </ul>
-          </div>
-          
-          {/* Support */}
-          <div>
-            <h3 className="font-semibold mb-4">Support</h3>
+          </nav>
+
+          {/* Your Account. /dashboard sits behind Clerk's protect() middleware, so
+              it is only linked for a signed-in visitor — otherwise the click
+              lands on an auth 404 rather than a sign-in prompt. */}
+          <nav aria-label="Your account">
+            <h2 className={columnLabel}>Your Account</h2>
             <ul className="space-y-2 text-sm">
-              <li><Link href="/contact" className="text-muted-foreground hover:text-primary">Contact Us</Link></li>
-              <li><Link href="/shipping" className="text-muted-foreground hover:text-primary">Shipping Info</Link></li>
-              <li><Link href="/returns" className="text-muted-foreground hover:text-primary">Returns</Link></li>
-              <li><Link href="/faq" className="text-muted-foreground hover:text-primary">FAQ</Link></li>
+              <li>
+                <Link href="/cart" className={linkClass}>
+                  Your Cart
+                </Link>
+              </li>
+              <SignedIn>
+                <li>
+                  <Link href="/dashboard" className={linkClass}>
+                    Order History
+                  </Link>
+                </li>
+              </SignedIn>
+              <SignedOut>
+                <li>
+                  <Link href="/sign-in" className={linkClass}>
+                    Sign In
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/sign-up" className={linkClass}>
+                    Create Account
+                  </Link>
+                </li>
+              </SignedOut>
             </ul>
-          </div>
-          
-          {/* Company */}
-          <div>
-            <h3 className="font-semibold mb-4">Company</h3>
-            <ul className="space-y-2 text-sm">
-              <li><Link href="/about" className="text-muted-foreground hover:text-primary">About Us</Link></li>
-              <li><Link href="/careers" className="text-muted-foreground hover:text-primary">Careers</Link></li>
-              <li><Link href="/press" className="text-muted-foreground hover:text-primary">Press</Link></li>
-            </ul>
-          </div>
-          
-          {/* Legal */}
-          <div>
-            <h3 className="font-semibold mb-4">Legal</h3>
-            <ul className="space-y-2 text-sm">
-              <li><Link href="/privacy" className="text-muted-foreground hover:text-primary">Privacy Policy</Link></li>
-              <li><Link href="/terms" className="text-muted-foreground hover:text-primary">Terms of Service</Link></li>
-              <li><Link href="/accessibility" className="text-muted-foreground hover:text-primary">Accessibility</Link></li>
-            </ul>
-          </div>
+          </nav>
         </div>
-        
+
         {/* Brand Footer Image */}
         <div className="mt-12 relative h-32 md:h-48 w-full">
           <Image
@@ -65,19 +87,12 @@ export function Footer() {
             className="object-contain"
           />
         </div>
-        
+
         {/* Bottom */}
-        <div className="border-t mt-8 pt-8 flex flex-col md:flex-row items-center justify-between gap-4">
-         
-          <p className="text-sm text-muted-foreground">
-            &copy; {new Date().getFullYear()} ElectroMuscial Store. All rights reserved.
+        <div className="mt-8 flex flex-col items-center justify-between gap-4 border-t border-border pt-8">
+          <p className="text-xs text-muted-foreground">
+            &copy; {new Date().getFullYear()} Zionstone Electro Musical Store. All rights reserved.
           </p>
-          <div className="flex gap-4">
-            <a href="#" className="text-muted-foreground hover:text-primary">Facebook</a>
-            <a href="#" className="text-muted-foreground hover:text-primary">Twitter</a>
-            <a href="#" className="text-muted-foreground hover:text-primary">Instagram</a>
-            <a href="#" className="text-muted-foreground hover:text-primary">YouTube</a>
-          </div>
         </div>
       </div>
     </footer>

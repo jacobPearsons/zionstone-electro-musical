@@ -8,6 +8,7 @@ node_modules/
 out/
 build/
 dist/
+*.tsbuildinfo
 
 # Environment
 .env
@@ -46,3 +47,6 @@ prisma/*.db-journal
 # Worktrees
 .worktrees/
 worktrees/
+
+# stray credentials dump (duplicate of .env)
+problems.md

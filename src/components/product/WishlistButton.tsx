@@ -30,7 +30,7 @@ export function WishlistButton({ product, className = '', variant = 'ghost' }: W
         className={`absolute top-3 right-3 z-10 ${className}`}
       >
         <Heart 
-          className={`h-5 w-5 transition-colors ${inWishlist ? 'fill-pink-500 text-pink-500' : 'text-gray-500'}`} 
+          className={`h-5 w-5 transition-colors ${inWishlist ? 'fill-primary text-primary' : 'text-muted-foreground'}`} 
         />
       </Button>
     );

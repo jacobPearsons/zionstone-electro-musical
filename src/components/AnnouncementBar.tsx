@@ -32,21 +32,21 @@ export function AnnouncementBar({ message, link, linkText = 'Shop Now' }: Announ
 
   return (
     <div 
-      className={`bg-slate-900 text-white py-2 transition-all duration-300 ${
+      className={`bg-secondary text-secondary-foreground py-2 transition-all duration-300 ${
         isAnimating ? 'opacity-0 -translate-y-full' : 'opacity-100'
       }`}
     >
       <div className="container mx-auto px-4">
-        <div className="flex items-center justify-center gap-4 text-sm relative">
+        <div className="relative flex items-center justify-center gap-3 text-xs">
           <p>{message}</p>
           {link && (
-            <a href={link} className="font-medium underline hover:text-yellow-300">
+            <a href={link} className="font-medium underline underline-offset-4 transition-colors duration-150 hover:text-primary-strong">
               {linkText}
             </a>
           )}
           <button
             onClick={handleDismiss}
-            className="absolute right-0 md:right-4 p-1 hover:bg-white/10 rounded transition-colors"
+            className="absolute right-0 md:right-4 rounded-full p-1 transition-colors duration-150 hover:bg-secondary-foreground/10 focus-visible:ring-2 focus-visible:ring-primary"
             aria-label="Dismiss"
           >
             <X className="w-4 h-4" />

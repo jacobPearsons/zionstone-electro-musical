@@ -6,12 +6,13 @@ import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Check, ChevronRight, MapPin, CreditCard, Truck, ArrowLeft, ShoppingBag } from 'lucide-react';
+import { Check, ChevronRight, MapPin, CreditCard, Truck, ArrowLeft, ShoppingBag, Wallet } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ShippingSelector, DeliveryEstimate } from '@/components/shipping';
-import { calculateShipping } from '@/lib/shipping';
+import { calculateShipping, formatDeliveryDate } from '@/lib/shipping';
 import { useCart } from '@/lib/cart-context';
+import { formatPrice } from '@/lib/utils';
 import type { ShippingMethod } from '@/types/shipping';
 
 const shippingSchema = z.object({
@@ -126,91 +127,86 @@ export default function CheckoutPage() {
     return (
       <div className="container mx-auto px-4 py-16 text-center">
         <ShoppingBag className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
-        <h1 className="text-2xl font-bold mb-2">Your cart is empty</h1>
-        <p className="text-muted-foreground mb-6">Add some products to get started!</p>
-        <Link href="/products">
-          <Button>Continue Shopping</Button>
-        </Link>
+        <h1 className="text-2xl font-semibold tracking-tight mb-2">Your cart is empty</h1>
+        <p className="text-muted-foreground mb-2">Add some products to get started!</p>
+        {/* `/checkout(.*)` is behind Clerk's `protect()` in src/middleware.ts, so
+            an empty cart here can only be reached while signed in — but the copy
+            has to say so rather than let a signed-out customer believe an empty
+            cart is the only thing between them and an order. */}
+        <p className="text-sm text-muted-foreground mb-6">
+          Checking out requires a signed-in account.
+        </p>
+        <Button asChild>
+          <Link href="/products">Continue Shopping</Link>
+        </Button>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white border-b">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <Link href="/" className="flex items-center gap-2">
-              <span className="text-2xl">🎸</span>
-              <span className="font-bold text-lg text-yellow-600">ElectroMuscial</span>
-            </Link>
-            <Link href="/cart" className="flex items-center gap-2 text-sm text-muted-foreground hover:text-primary">
-              <ArrowLeft className="w-4 h-4" />
+    <div className="min-h-screen bg-muted">
+      {/* Checkout bar — the only chrome this page keeps. The layout header
+          directly above already carries the wordmark and the cart link, so a
+          second brand mark here put two logos and two "back to cart" targets
+          within 100px of each other (spec §3.9). What checkout genuinely needs is
+          a way back and a sense of where you are in the flow, and nothing else. */}
+      <div className="bg-card border-b border-border">
+        <div className="container mx-auto px-4">
+          <div className="flex items-center gap-4 py-2">
+            <Link
+              href="/cart"
+              className="flex min-h-11 shrink-0 items-center gap-2 text-sm text-muted-foreground transition-colors duration-200 ease-out hover:text-primary-strong"
+            >
+              <ArrowLeft className="w-4 h-4" aria-hidden="true" />
               Back to cart
             </Link>
-          </div>
-        </div>
-      </header>
+            <nav aria-label="Checkout progress" className="flex flex-1 items-center justify-start gap-4 overflow-x-auto sm:justify-center">
+              {steps.map((step, index) => {
+                const Icon = step.icon;
+                const isActive = step.id === currentStep;
+                const isCompleted = index < currentStepIndex;
 
-      {/* Progress Steps */}
-      <div className="bg-white border-b">
-        <div className="container mx-auto px-4 py-4">
-          <nav className="flex items-center justify-center">
-            {steps.map((step, index) => {
-              const Icon = step.icon;
-              const isActive = step.id === currentStep;
-              const isCompleted = index < currentStepIndex;
-              
-              return (
-                <div key={step.id} className="flex items-center">
-                  <div className={`flex items-center gap-2 ${isActive ? 'text-blue-600' : isCompleted ? 'text-green-600' : 'text-gray-400'}`}>
-                    <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                      isActive ? 'bg-blue-600 text-white' : isCompleted ? 'bg-green-600 text-white' : 'bg-gray-200'
-                    }`}>
-                      {isCompleted ? <Check className="w-4 h-4" /> : <Icon className="w-4 h-4" />}
+                return (
+                  <div key={step.id} className="flex items-center">
+                    <div className={`flex items-center gap-2 transition-colors duration-200 ease-out ${isActive ? 'text-primary-strong' : isCompleted ? 'text-emerald-600 dark:text-emerald-400' : 'text-muted-foreground'}`}>
+                      <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                        isActive ? 'bg-primary text-primary-foreground' : isCompleted ? 'bg-emerald-600 text-white' : 'bg-muted text-muted-foreground'
+                      }`}>
+                        {isCompleted ? <Check className="w-4 h-4" aria-hidden="true" /> : <Icon className="w-4 h-4" aria-hidden="true" />}
+                      </div>
+                      <span className="font-medium hidden sm:block">{step.name}</span>
                     </div>
-                    <span className="font-medium hidden sm:block">{step.name}</span>
+                    {index < steps.length - 1 && (
+                      <ChevronRight className="w-5 h-5 text-border mx-4" aria-hidden="true" />
+                    )}
                   </div>
-                  {index < steps.length - 1 && (
-                    <ChevronRight className="w-5 h-5 text-gray-300 mx-4" />
-                  )}
-                </div>
-              );
-            })}
-          </nav>
-        </div>
-      </div>
-
-      {/* Guest Checkout Option */}
-      <div className="container mx-auto px-4 py-4">
-        <div className="bg-yellow-50 border border-purple-100 rounded-lg p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="font-medium text-yellow-900">Already have an account?</p>
-              <p className="text-sm text-yellow-700">
-                Sign in for faster checkout and order tracking
-              </p>
-            </div>
-            <Button variant="outline" asChild>
-              <Link href="/sign-in?redirect=/checkout">Sign In</Link>
-            </Button>
+                );
+              })}
+            </nav>
           </div>
-          <p className="text-sm text-yellow-600 mt-3">
-            Or continue as guest. You can create an account after placing your order.
-          </p>
         </div>
       </div>
 
-      <div className="container mx-auto px-4 py-8">
+      {/* The one honest sentence about auth. `/checkout(.*)` is protected by
+          Clerk in src/middleware.ts, so a signed-out customer is redirected to
+          sign-in before this component ever renders. The page used to promise
+          the opposite — a guest path and an account created after the order —
+          neither of which exists, and no order is ever placed here. */}
+      <div className="container mx-auto px-4 pt-6">
+        <p className="text-sm text-muted-foreground">
+          Checkout is available to signed-in accounts. There is no guest checkout.
+        </p>
+      </div>
+
+      <div className="container mx-auto px-4 py-12 md:py-16">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Main Content */}
           <div className="lg:col-span-2">
-            <div className="bg-white rounded-xl shadow-sm p-6">
+            <div className="rounded-card border border-border bg-card p-6">
               {/* Shipping Step */}
               {currentStep === 'shipping' && (
                 <form onSubmit={shippingForm.handleSubmit(() => setCurrentStep('delivery'))} className="space-y-6">
-                  <h2 className="text-xl font-semibold">Contact Information</h2>
+                  <h2 className="text-xl font-semibold tracking-tight">Contact Information</h2>
                   
                   <div>
                     <Input
@@ -219,11 +215,11 @@ export default function CheckoutPage() {
                       {...shippingForm.register('email')}
                     />
                     {shippingForm.formState.errors.email && (
-                      <p className="text-sm text-red-500 mt-1">{shippingForm.formState.errors.email.message}</p>
+                      <p className="text-sm text-destructive mt-1">{shippingForm.formState.errors.email.message}</p>
                     )}
                   </div>
 
-                  <h2 className="text-xl font-semibold pt-4">Shipping Address</h2>
+                  <h2 className="text-xl font-semibold tracking-tight pt-4">Shipping Address</h2>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <Input
@@ -231,7 +227,7 @@ export default function CheckoutPage() {
                         {...shippingForm.register('firstName')}
                       />
                       {shippingForm.formState.errors.firstName && (
-                        <p className="text-sm text-red-500 mt-1">{shippingForm.formState.errors.firstName.message}</p>
+                        <p className="text-sm text-destructive mt-1">{shippingForm.formState.errors.firstName.message}</p>
                       )}
                     </div>
                     <div>
@@ -240,7 +236,7 @@ export default function CheckoutPage() {
                         {...shippingForm.register('lastName')}
                       />
                       {shippingForm.formState.errors.lastName && (
-                        <p className="text-sm text-red-500 mt-1">{shippingForm.formState.errors.lastName.message}</p>
+                        <p className="text-sm text-destructive mt-1">{shippingForm.formState.errors.lastName.message}</p>
                       )}
                     </div>
                   </div>
@@ -250,7 +246,7 @@ export default function CheckoutPage() {
                       {...shippingForm.register('address1')}
                     />
                     {shippingForm.formState.errors.address1 && (
-                      <p className="text-sm text-red-500 mt-1">{shippingForm.formState.errors.address1.message}</p>
+                      <p className="text-sm text-destructive mt-1">{shippingForm.formState.errors.address1.message}</p>
                     )}
                   </div>
                   <Input
@@ -264,12 +260,12 @@ export default function CheckoutPage() {
                         {...shippingForm.register('city')}
                       />
                       {shippingForm.formState.errors.city && (
-                        <p className="text-sm text-red-500 mt-1">{shippingForm.formState.errors.city.message}</p>
+                        <p className="text-sm text-destructive mt-1">{shippingForm.formState.errors.city.message}</p>
                       )}
                     </div>
                     <div>
                       <select
-                        className="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm w-full"
+                        className="min-h-11 rounded-md border border-input bg-background px-3 py-2 text-sm w-full"
                         {...shippingForm.register('state')}
                       >
                         <option value="">State</option>
@@ -278,7 +274,7 @@ export default function CheckoutPage() {
                         ))}
                       </select>
                       {shippingForm.formState.errors.state && (
-                        <p className="text-sm text-red-500 mt-1">{shippingForm.formState.errors.state.message}</p>
+                        <p className="text-sm text-destructive mt-1">{shippingForm.formState.errors.state.message}</p>
                       )}
                     </div>
                   </div>
@@ -290,7 +286,7 @@ export default function CheckoutPage() {
                         maxLength={5}
                       />
                       {shippingForm.formState.errors.postalCode && (
-                        <p className="text-sm text-red-500 mt-1">{shippingForm.formState.errors.postalCode.message}</p>
+                        <p className="text-sm text-destructive mt-1">{shippingForm.formState.errors.postalCode.message}</p>
                       )}
                     </div>
                     <Input
@@ -311,7 +307,7 @@ export default function CheckoutPage() {
               {/* Delivery Step */}
               {currentStep === 'delivery' && (
                 <div className="space-y-6">
-                  <h2 className="text-xl font-semibold">Delivery Method</h2>
+                  <h2 className="text-xl font-semibold tracking-tight">Delivery Method</h2>
                   <p className="text-sm text-muted-foreground">
                     Shipping to {shippingForm.getValues('city') || 'your location'}, {shippingForm.getValues('state') || ''} {shippingForm.getValues('postalCode')}
                   </p>
@@ -345,16 +341,14 @@ export default function CheckoutPage() {
               {/* Payment Step */}
               {currentStep === 'payment' && (
                 <form onSubmit={paymentForm.handleSubmit(() => setCurrentStep('review'))} className="space-y-6">
-                  <h2 className="text-xl font-semibold">Payment Method</h2>
+                  <h2 className="text-xl font-semibold tracking-tight">Payment Method</h2>
                   
-                  <div className="p-4 border rounded-lg bg-gray-50">
-                    <div className="flex items-center gap-3 mb-4">
-                      <input type="radio" name="payment" defaultChecked className="w-4 h-4" />
+                  <div className="p-4 rounded-card border border-border bg-muted">
+                    <label className="flex min-h-11 items-center gap-3 mb-4">
+                      <input type="radio" name="payment" defaultChecked className="w-4 h-4 flex-shrink-0 accent-primary" />
                       <span className="font-medium">Credit or Debit Card</span>
-                      <div className="ml-auto flex gap-1">
-                        <span className="text-2xl">💳</span>
-                      </div>
-                    </div>
+                      <CreditCard className="ml-auto h-5 w-5 text-primary-strong" aria-hidden="true" />
+                    </label>
                     
                     <div className="space-y-4">
                       <div>
@@ -364,7 +358,7 @@ export default function CheckoutPage() {
                           maxLength={16}
                         />
                         {paymentForm.formState.errors.cardNumber && (
-                          <p className="text-sm text-red-500 mt-1">{paymentForm.formState.errors.cardNumber.message}</p>
+                          <p className="text-sm text-destructive mt-1">{paymentForm.formState.errors.cardNumber.message}</p>
                         )}
                       </div>
                       <div>
@@ -373,7 +367,7 @@ export default function CheckoutPage() {
                           {...paymentForm.register('cardName')}
                         />
                         {paymentForm.formState.errors.cardName && (
-                          <p className="text-sm text-red-500 mt-1">{paymentForm.formState.errors.cardName.message}</p>
+                          <p className="text-sm text-destructive mt-1">{paymentForm.formState.errors.cardName.message}</p>
                         )}
                       </div>
                       <div className="grid grid-cols-2 gap-4">
@@ -384,7 +378,7 @@ export default function CheckoutPage() {
                             maxLength={5}
                           />
                           {paymentForm.formState.errors.cardExpiry && (
-                            <p className="text-sm text-red-500 mt-1">{paymentForm.formState.errors.cardExpiry.message}</p>
+                            <p className="text-sm text-destructive mt-1">{paymentForm.formState.errors.cardExpiry.message}</p>
                           )}
                         </div>
                         <div>
@@ -394,19 +388,19 @@ export default function CheckoutPage() {
                             maxLength={4}
                           />
                           {paymentForm.formState.errors.cardCvc && (
-                            <p className="text-sm text-red-500 mt-1">{paymentForm.formState.errors.cardCvc.message}</p>
+                            <p className="text-sm text-destructive mt-1">{paymentForm.formState.errors.cardCvc.message}</p>
                           )}
                         </div>
                       </div>
                     </div>
                   </div>
 
-                  <div className="p-4 border rounded-lg">
-                    <div className="flex items-center gap-3">
-                      <input type="radio" name="payment" className="w-4 h-4" />
+                  <div className="p-4 rounded-card border border-border">
+                    <label className="flex min-h-11 items-center gap-3">
+                      <input type="radio" name="payment" className="w-4 h-4 flex-shrink-0 accent-primary" />
                       <span className="font-medium">PayPal</span>
-                      <span className="text-2xl ml-2">🅿️</span>
-                    </div>
+                      <Wallet className="ml-2 h-5 w-5 text-muted-foreground" aria-hidden="true" />
+                    </label>
                   </div>
 
                   <div className="flex justify-between pt-4">
@@ -429,9 +423,9 @@ export default function CheckoutPage() {
                       Back
                     </Button>
                   ) : (
-                    <Link href="/cart">
-                      <Button variant="outline">Back</Button>
-                    </Link>
+                    <Button asChild variant="outline">
+                      <Link href="/cart">Back</Link>
+                    </Button>
                   )}
                   
                   {currentStepIndex < steps.length - 1 ? (
@@ -440,7 +434,7 @@ export default function CheckoutPage() {
                       <ChevronRight className="w-4 h-4 ml-2" />
                     </Button>
                   ) : (
-                    <Button className="bg-green-600 hover:bg-green-700">
+                    <Button>
                       Place Order
                     </Button>
                   )}
@@ -451,15 +445,15 @@ export default function CheckoutPage() {
 
           {/* Order Summary */}
           <div className="lg:col-span-1">
-            <div className="bg-white rounded-xl shadow-sm p-6 sticky top-4">
-              <h3 className="font-semibold text-lg mb-4">Order Summary</h3>
+            <div className="rounded-card border border-border bg-card p-6 sticky top-4">
+              <h3 className="font-semibold tracking-tight text-lg mb-4">Order Summary</h3>
               
               <div className="space-y-4 mb-6">
                 {items.map((item) => (
                   <div key={item.id} className="flex gap-3">
-                    <div className="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center text-2xl relative">
+                    <div className="w-16 h-16 bg-muted rounded-card flex items-center justify-center text-2xl relative">
                       {item.image}
-                      <span className="absolute -top-1 -right-1 w-5 h-5 bg-gray-500 text-white text-xs rounded-full flex items-center justify-center">
+                      <span className="absolute -top-1 -right-1 w-5 h-5 bg-primary text-primary-foreground text-xs font-semibold tabular-nums rounded-full flex items-center justify-center">
                         {item.quantity}
                       </span>
                     </div>
@@ -467,39 +461,35 @@ export default function CheckoutPage() {
                       <p className="text-sm font-medium line-clamp-1">{item.name}</p>
                       <p className="text-xs text-muted-foreground">{item.brand}</p>
                     </div>
-                    <p className="text-sm font-medium">${item.price}</p>
+                    <p className="text-sm font-semibold tabular-nums">{formatPrice(item.price)}</p>
                   </div>
                 ))}
               </div>
 
-              <div className="space-y-3 border-t pt-4">
+              <div className="space-y-3 border-t border-border pt-4">
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Subtotal</span>
-                  <span>${subtotal.toFixed(2)}</span>
+                  <span className="tabular-nums">{formatPrice(subtotal)}</span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Shipping</span>
-                  <span>{selectedShipping ? `$${selectedShipping.price.toFixed(2)}` : '--'}</span>
+                  <span className="tabular-nums">{selectedShipping ? formatPrice(selectedShipping.price) : '--'}</span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Tax (8%)</span>
-                  <span>${tax.toFixed(2)}</span>
+                  <span className="tabular-nums">{formatPrice(tax)}</span>
                 </div>
-                <div className="flex justify-between font-semibold text-lg border-t pt-3">
+                <div className="flex justify-between text-lg font-semibold border-t border-border pt-3">
                   <span>Total</span>
-                  <span>${total.toFixed(2)}</span>
+                  <span className="tabular-nums">{formatPrice(total)}</span>
                 </div>
               </div>
 
               {selectedShipping && shippingCalculation.estimatedDeliveryDates[selectedShipping.id] && (
-                <div className="mt-4 p-3 bg-blue-50 rounded-lg">
-                  <p className="text-sm text-blue-700">
-                    <span className="font-medium">Estimated Delivery:</span>{' '}
-                    {shippingCalculation.estimatedDeliveryDates[selectedShipping.id].toLocaleDateString('en-US', {
-                      weekday: 'long',
-                      month: 'short',
-                      day: 'numeric'
-                    })}
+                <div className="mt-4 p-3 rounded-card border border-border bg-primary/10">
+                  <p className="text-sm text-foreground">
+                    <span className="font-semibold">Estimated Delivery:</span>{' '}
+                    {formatDeliveryDate(shippingCalculation.estimatedDeliveryDates[selectedShipping.id])}
                   </p>
                 </div>
               )}

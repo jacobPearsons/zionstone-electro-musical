@@ -5,10 +5,11 @@ import { MapPin, Check } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { calculateShipping, formatDeliveryDate } from '@/lib/shipping';
+import { formatPrice } from '@/lib/utils';
 import type { ShippingMethod } from '@/types/shipping';
 
 interface ShippingCalculatorProps {
-  onCalculate: (method: ShippingMethod, deliveryDate: Date) => void;
+  onCalculate: (method: ShippingMethod, deliveryDate: string) => void;
   className?: string;
 }
 
@@ -43,11 +44,11 @@ export function ShippingCalculator({ onCalculate, className = '' }: ShippingCalc
     const calculation = calculateShipping(zipCode);
     
     return (
-      <div className={`p-4 border border-gray-200 rounded-lg bg-white ${className}`}>
+      <div className={`p-4 border border-border rounded-lg bg-card text-card-foreground ${className}`}>
         <div className="flex items-center gap-2 mb-4">
-          <MapPin className="w-4 h-4 text-gray-500" />
+          <MapPin className="w-4 h-4 text-muted-foreground" />
           <span className="text-sm font-medium">Shipping to {zipCode}</span>
-          <Check className="w-4 h-4 text-green-500" />
+          <Check className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
         </div>
         
         <div className="space-y-2 mb-4">
@@ -59,7 +60,7 @@ export function ShippingCalculator({ onCalculate, className = '' }: ShippingCalc
               <label
                 key={method.id}
                 className={`flex items-center justify-between p-3 border rounded cursor-pointer transition-colors ${
-                  isSelected ? 'border-primary bg-primary/5' : 'border-gray-200 hover:border-gray-300'
+                  isSelected ? 'border-primary bg-primary/5' : 'border-border hover:border-foreground/20'
                 }`}
               >
                 <div className="flex items-center gap-3">
@@ -71,20 +72,20 @@ export function ShippingCalculator({ onCalculate, className = '' }: ShippingCalc
                     className="sr-only"
                   />
                   <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${
-                    isSelected ? 'border-primary' : 'border-gray-300'
+                    isSelected ? 'border-primary' : 'border-foreground/30'
                   }`}>
                     {isSelected && <div className="w-2 h-2 rounded-full bg-primary" />}
                   </div>
                   <div>
                     <p className="text-sm font-medium">{method.name}</p>
                     {deliveryDate && (
-                      <p className="text-xs text-gray-500">
+                      <p className="text-xs text-muted-foreground">
                         Arrives {formatDeliveryDate(deliveryDate)}
                       </p>
                     )}
                   </div>
                 </div>
-                <span className="font-medium">${method.price.toFixed(2)}</span>
+                <span className="font-medium">{formatPrice(method.price)}</span>
               </label>
             );
           })}
@@ -103,13 +104,13 @@ export function ShippingCalculator({ onCalculate, className = '' }: ShippingCalc
   }
   
   return (
-    <div className={`p-4 border border-gray-200 rounded-lg bg-white ${className}`}>
-      <label className="block text-sm font-medium text-gray-700 mb-2">
+    <div className={`p-4 border border-border rounded-lg bg-card text-card-foreground ${className}`}>
+      <label className="block text-sm font-medium text-foreground mb-2">
         Calculate Shipping
       </label>
       <div className="flex gap-2">
         <div className="relative flex-1">
-          <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+          <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input
             type="text"
             placeholder="Enter ZIP code"
@@ -119,7 +120,7 @@ export function ShippingCalculator({ onCalculate, className = '' }: ShippingCalc
               setZipCode(value);
               setIsValid(null);
             }}
-            className={`pl-9 ${isValid === false ? 'border-red-500' : ''}`}
+            className={`pl-9 ${isValid === false ? 'border-destructive' : ''}`}
           />
         </div>
         <Button onClick={handleCalculate} disabled={zipCode.length !== 5}>
@@ -127,7 +128,7 @@ export function ShippingCalculator({ onCalculate, className = '' }: ShippingCalc
         </Button>
       </div>
       {isValid === false && (
-        <p className="text-xs text-red-500 mt-1">Please enter a valid 5-digit ZIP code</p>
+        <p className="text-xs text-destructive mt-1">Please enter a valid 5-digit ZIP code</p>
       )}
     </div>
   );
