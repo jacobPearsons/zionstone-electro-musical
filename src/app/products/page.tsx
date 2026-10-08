@@ -7,7 +7,7 @@ import { Search, SlidersHorizontal, Grid3X3, LayoutList, X } from 'lucide-react'
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ShippingBadge } from '@/components/shipping';
-import { AddToCartButton } from '@/components/product';
+import { AddToCartButton, ProductImage, ContactOwnerButton } from '@/components/product';
 import { products, isOnSale, discountPercent } from '@/data/products';
 import { BRANDS, CATEGORIES, CATEGORY_SLUGS, categoryDisplayName } from '@/data/categories';
 import { formatPrice } from '@/lib/utils';
@@ -76,7 +76,7 @@ function ProductsPageContent() {
 
     if (selectedPriceRange) {
       result = result.filter(p => 
-        p.price >= selectedPriceRange.min && p.price < selectedPriceRange.max
+        p.price != null && p.price >= selectedPriceRange.min && p.price < selectedPriceRange.max
       );
     }
 
@@ -100,13 +100,13 @@ function ProductsPageContent() {
 
     switch (sortBy) {
       case 'price-low':
-        result.sort((a, b) => a.price - b.price);
+        result.sort((a, b) => (a.price ?? -Infinity) - (b.price ?? -Infinity));
         break;
       case 'price-high':
-        result.sort((a, b) => b.price - a.price);
+        result.sort((a, b) => (b.price ?? -Infinity) - (a.price ?? -Infinity));
         break;
       case 'rating':
-        result.sort((a, b) => b.rating - a.rating);
+        result.sort((a, b) => (b.rating ?? 0) - (a.rating ?? 0));
         break;
     }
 
@@ -400,7 +400,7 @@ function ProductsPageContent() {
                     <div className={`relative flex items-center justify-center bg-muted ${
                       viewMode === 'grid' ? 'aspect-square' : 'w-48 h-48 flex-shrink-0'
                     }`}>
-                      <span className="text-6xl">{product.emoji}</span>
+                      <ProductImage image={product.images?.[0] ?? product.emoji ?? ''} name={product.name} />
                       <div className="absolute top-3 left-3">
                         <ShippingBadge
                           shipsInDays={product.shipsInDays}
@@ -426,31 +426,44 @@ function ProductsPageContent() {
                         {product.name}
                       </h3>
                     </Link>
-                    <div className="flex items-center gap-1 mt-2">
-                      <span className="text-muted-foreground">★</span>
-                      <span className="text-sm tabular-nums">{product.rating}</span>
-                      <span className="text-xs text-muted-foreground">({product.reviews})</span>
-                    </div>
-                    <div className="flex items-baseline gap-2 mt-2">
-                      <span className="text-lg font-semibold tabular-nums text-primary-strong">{formatPrice(product.price)}</span>
-                      {isOnSale(product) && (
-                        <span className="text-sm tabular-nums text-muted-foreground line-through">
-                          {formatPrice(product.originalPrice as number)}
-                        </span>
-                      )}
-                    </div>
+                    {product.rating != null && (
+                      <div className="flex items-center gap-1 mt-2">
+                        <span className="text-muted-foreground">★</span>
+                        <span className="text-sm tabular-nums">{product.rating}</span>
+                        <span className="text-xs text-muted-foreground">({product.reviews ?? 0})</span>
+                      </div>
+                    )}
+                    {product.price != null ? (
+                      <div className="flex items-baseline gap-2 mt-2">
+                        <span className="text-lg font-semibold tabular-nums text-primary-strong">{formatPrice(product.price, product.currency ?? 'USD')}</span>
+                        {isOnSale(product) && (
+                          <span className="text-sm tabular-nums text-muted-foreground line-through">
+                            {formatPrice(product.originalPrice as number, product.currency ?? 'USD')}
+                          </span>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="flex items-baseline gap-2 mt-2">
+                        <span className="text-lg font-semibold tabular-nums text-primary-strong">Price on Request</span>
+                      </div>
+                    )}
                     <div className="mt-auto pt-3">
-                      <AddToCartButton
-                        product={{
-                          productId: product.id,
-                          name: product.name,
-                          price: product.price,
-                          image: product.emoji,
-                          quantity: 1,
-                          slug: product.slug,
-                          brand: product.brand,
-                        }}
-                      />
+                      {product.price != null ? (
+                        <AddToCartButton
+                          product={{
+                            productId: product.id,
+                            name: product.name,
+                            price: product.price,
+                            image: product.images?.[0] ?? product.emoji ?? '',
+                            quantity: 1,
+                            slug: product.slug,
+                            brand: product.brand,
+                            currency: product.currency,
+                          }}
+                        />
+                      ) : (
+                        <ContactOwnerButton productName={product.name} productSlug={product.slug} />
+                      )}
                     </div>
                   </div>
                 </div>

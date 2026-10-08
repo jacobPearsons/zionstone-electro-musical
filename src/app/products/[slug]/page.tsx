@@ -6,10 +6,11 @@ import Link from "next/link";
 import { ArrowLeft, Share2, Truck, Shield, RotateCcw, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ShippingBadge, DeliveryEstimate, ShippingSelector } from '@/components/shipping';
-import { AddToCartButton, WishlistButton, ProductTabs, CompatibilityChecker, DeliveryEstimator } from '@/components/product';
+import { AddToCartButton, WishlistButton, ProductTabs, CompatibilityChecker, DeliveryEstimator, ProductImage, ContactOwnerButton } from '@/components/product';
 import { getProductBySlug, getRelatedProducts } from '@/data/products';
 import { calculateShipping, getShippingBadgeText } from '@/lib/shipping';
 import { formatPrice } from '@/lib/utils';
+import { resolveImageSrc } from '@/lib/images';
 import { useRecentlyViewed } from '@/lib/recently-viewed-context';
 import type { ShippingMethod } from '@/types/shipping';
 
@@ -54,7 +55,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug: 
   const relatedProducts = getRelatedProducts(product);
   const productImages = product.images && product.images.length > 0 
     ? product.images 
-    : [product.emoji];
+    : product.emoji ? [product.emoji] : [];
 
   return (
     <div className="container mx-auto px-4 py-16 md:py-24">
@@ -69,18 +70,20 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug: 
         <div className="space-y-4">
           <div className="relative overflow-hidden rounded-card border border-border bg-muted">
             <div className="aspect-square flex items-center justify-center">
-              {productImages[selectedImage]?.startsWith('/') ? (
-                <Image
-                  src={productImages[selectedImage]}
-                  alt={product.name}
-                  width={600}
-                  height={600}
-                  className="object-contain max-h-[500px]"
-                  priority
-                />
-              ) : (
-                <span className="text-4xl">{productImages[selectedImage]}</span>
-              )}
+              {productImages[selectedImage] ? (
+                productImages[selectedImage]?.startsWith('/') ? (
+                  <Image
+                    src={resolveImageSrc(productImages[selectedImage])}
+                    alt={product.name}
+                    width={600}
+                    height={600}
+                    className="object-contain max-h-[500px]"
+                    priority
+                  />
+                ) : (
+                  <span className="text-4xl">{productImages[selectedImage]}</span>
+                )
+              ) : null}
             </div>
             <div className="absolute top-4 left-4 z-10">
               <ShippingBadge
@@ -88,7 +91,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug: 
                 twoDayEligible={product.twoDayEligible}
               />
             </div>
-            {(product.originalPrice ?? 0) > product.price && (
+            {product.price != null && (product.originalPrice ?? 0) > product.price && (
               <div className="absolute top-4 right-4 z-10 rounded-full bg-destructive px-3 py-1 text-sm font-semibold text-destructive-foreground">
                 {Math.round((1 - product.price / (product.originalPrice ?? product.price)) * 100)}% OFF
               </div>
@@ -110,7 +113,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug: 
                 >
                   {img?.startsWith('/') ? (
                     <Image
-                      src={img}
+                      src={resolveImageSrc(img)}
                       alt={`${product.name} view ${i + 1}`}
                       fill
                       className="object-cover"
@@ -142,41 +145,53 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug: 
                 (WCAG 1.4.1). Opacity alone was the only signal.
               The row is `aria-hidden` because the number beside it is the value;
               a screen reader should hear "4.8 (2,173 reviews)", not five stars. */}
-          <div className="flex items-center gap-3 mb-4">
-            <div className="flex items-center gap-1" aria-hidden="true">
-              {[1, 2, 3, 4, 5].map((star) => {
-                const filled = star <= product.rating;
-                return (
-                  <span
-                    key={star}
-                    className={`text-lg ${filled ? 'text-foreground' : 'text-muted-foreground/40'}`}
-                  >
-                    {filled ? '★' : '☆'}
-                  </span>
-                );
-              })}
+          {product.rating != null && (
+            <div className="flex items-center gap-3 mb-4">
+              <div className="flex items-center gap-1" aria-hidden="true">
+                {[1, 2, 3, 4, 5].map((star) => {
+                  const filled = star <= (product.rating ?? 0);
+                  return (
+                    <span
+                      key={star}
+                      className={`text-lg ${filled ? 'text-foreground' : 'text-muted-foreground/40'}`}
+                    >
+                      {filled ? '★' : '☆'}
+                    </span>
+                  );
+                })}
+              </div>
+              <span className="text-sm text-muted-foreground">
+                {product.rating ?? 0} ({(product.reviews ?? 0).toLocaleString()} reviews)
+              </span>
             </div>
-            <span className="text-sm text-muted-foreground">
-              {product.rating} ({product.reviews.toLocaleString()} reviews)
-            </span>
-          </div>
+          )}
 
           {/* Price — the single gold moment in the buy column. 30px semibold
               clears the >=24px / >=18.66px-bold bar, so `text-primary` is legal
               here; everything else in the column stays on neutral or muted. */}
-          <div className="flex items-baseline gap-4 mb-4">
-            <span className="text-3xl font-semibold tabular-nums tracking-tight text-primary">{formatPrice(product.price)}</span>
-            {product.originalPrice && product.originalPrice > product.price && (
-              <>
-                <span className="text-xl tabular-nums text-muted-foreground line-through">
-                  {formatPrice(product.originalPrice)}
-                </span>
-                <span className="rounded-full bg-destructive/10 px-2 py-1 text-sm font-medium text-destructive">
-                  Save {formatPrice(product.originalPrice - product.price)}
-                </span>
-              </>
-            )}
-          </div>
+          {product.price != null ? (
+            <div className="flex items-baseline gap-4 mb-4">
+              <span className="text-3xl font-semibold tabular-nums tracking-tight text-primary">{formatPrice(product.price, product.currency ?? 'USD')}</span>
+              {product.originalPrice && product.originalPrice > product.price && (
+                <>
+                  <span className="text-xl tabular-nums text-muted-foreground line-through">
+                    {formatPrice(product.originalPrice, product.currency ?? 'USD')}
+                  </span>
+                  <span className="rounded-full bg-destructive/10 px-2 py-1 text-sm font-medium text-destructive">
+                    Save {formatPrice(product.originalPrice - product.price, product.currency ?? 'USD')}
+                  </span>
+                </>
+              )}
+            </div>
+          ) : (
+            <>
+              <div className="mb-4">
+                <span className="text-3xl font-semibold tracking-tight text-primary">Price on Request</span>
+                <p className="text-sm text-muted-foreground mt-1">This item is part of the owner&apos;s stock. Contact the owner for the selling price.</p>
+              </div>
+              <ContactOwnerButton productName={product.name} productSlug={product.slug} className="mb-6" />
+            </>
+          )}
 
           {/* Delivery Estimator - Quick Check */}
           <div className="mb-6">
@@ -194,12 +209,17 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug: 
 
           {/* Stock Status */}
           <div className="flex items-center gap-2 mb-6">
-            {product.inventory && product.inventory > 0 ? (
+            {product.price != null && product.inventory && product.inventory > 0 ? (
               <>
                 <div className="w-2 h-2 bg-emerald-500 rounded-full"></div>
                 <span className="text-sm font-medium text-emerald-600 dark:text-emerald-400">
                   In Stock ({product.inventory} available)
                 </span>
+              </>
+            ) : product.price == null ? (
+              <>
+                <div className="w-2 h-2 bg-muted-foreground/40 rounded-full"></div>
+                <span className="text-sm font-medium text-muted-foreground">Available on Request</span>
               </>
             ) : (
               <>
@@ -236,60 +256,65 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug: 
           </div>
 
           {/* Add to Cart / Wishlist */}
-          <div className="flex items-center gap-4 mb-6">
-            {/* Quantity Selector */}
-            <div className="flex items-center overflow-hidden rounded-card border border-border bg-background">
-              <button 
-                className="px-4 py-3 text-lg font-medium transition-colors duration-200 ease-out hover:bg-muted"
-                onClick={() => setQuantity(Math.max(1, quantity - 1))}
-              >
-                −
-              </button>
-              <input 
-                type="number" 
-                value={quantity} 
-                onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value) || 1))}
-                min={1} 
-                max={product.inventory || 99}
-                className="w-16 border-x border-border py-3 text-center font-medium tabular-nums bg-background" 
+          {product.price != null && (
+            <div className="flex items-center gap-4 mb-6">
+              {/* Quantity Selector */}
+              <div className="flex items-center overflow-hidden rounded-card border border-border bg-background">
+                <button
+                  className="px-4 py-3 text-lg font-medium transition-colors duration-200 ease-out hover:bg-muted"
+                  onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                >
+                  −
+                </button>
+                <input
+                  type="number"
+                  value={quantity}
+                  onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value) || 1))}
+                  min={1}
+                  max={product.inventory || 99}
+                  className="w-16 border-x border-border py-3 text-center font-medium tabular-nums bg-background"
+                />
+                <button
+                  className="px-4 py-3 text-lg font-medium transition-colors duration-200 ease-out hover:bg-muted"
+                  onClick={() => setQuantity(Math.min(product.inventory || 99, quantity + 1))}
+                >
+                  +
+                </button>
+              </div>
+
+              {/* Add to Cart Button */}
+              <AddToCartButton
+                product={{
+                  productId: product.id,
+                  name: product.name,
+                  price: product.price,
+                  image: product.images?.[0] ?? product.emoji ?? '',
+                  quantity: quantity,
+                  slug: product.slug,
+                  brand: product.brand,
+                  currency: product.currency,
+                }}
+                className="flex-1"
               />
-              <button 
-                className="px-4 py-3 text-lg font-medium transition-colors duration-200 ease-out hover:bg-muted"
-                onClick={() => setQuantity(Math.min(product.inventory || 99, quantity + 1))}
-              >
-                +
-              </button>
             </div>
-            
-            {/* Add to Cart Button */}
-            <AddToCartButton
-              product={{
-                productId: product.id,
-                name: product.name,
-                price: product.price,
-                image: product.emoji,
-                quantity: quantity,
-                slug: product.slug,
-                brand: product.brand,
-              }}
-              className="flex-1"
-            />
-          </div>
+          )}
 
           {/* Wishlist & Share */}
           <div className="flex gap-3 mb-8">
-            <WishlistButton
-              product={{
-                productId: product.id,
-                name: product.name,
-                price: product.price,
-                image: product.emoji,
-                slug: product.slug,
-                brand: product.brand,
-              }}
-              className="flex-1"
-              variant="outline"
-            />
+            {product.price != null && (
+              <WishlistButton
+                product={{
+                  productId: product.id,
+                  name: product.name,
+                  price: product.price,
+                  image: product.images?.[0] ?? product.emoji ?? '',
+                  slug: product.slug,
+                  brand: product.brand,
+                }}
+                className="flex-1"
+                variant="outline"
+              />
+            )}
             <Button variant="outline" size="icon" className="px-3">
               <Share2 className="h-4 w-4" />
             </Button>
@@ -340,7 +365,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug: 
                 className="group overflow-hidden rounded-card border border-border bg-card shadow-card transition-shadow duration-200 ease-out hover:shadow-card-hover"
               >
                 <div className="relative flex aspect-square items-center justify-center bg-muted">
-                  <span className="text-4xl">{relatedProduct.emoji}</span>
+                  <ProductImage image={relatedProduct.images?.[0] ?? relatedProduct.emoji ?? ''} name={relatedProduct.name} />
                   <div className="absolute top-3 left-3">
                     <ShippingBadge
                       shipsInDays={relatedProduct.shipsInDays}
@@ -353,7 +378,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug: 
                   <h3 className="line-clamp-2 font-semibold tracking-tight transition-colors duration-200 ease-out group-hover:text-primary-strong">
                     {relatedProduct.name}
                   </h3>
-                  <p className="mt-2 text-lg font-semibold tabular-nums text-primary-strong">{formatPrice(relatedProduct.price)}</p>
+                  <p className="mt-2 text-lg font-semibold tabular-nums text-primary-strong">{relatedProduct.price != null ? formatPrice(relatedProduct.price, relatedProduct.currency ?? 'USD') : 'Price on Request'}</p>
                 </div>
               </Link>
             ))}
@@ -378,14 +403,14 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug: 
                   href={`/products/${viewedProduct.slug}`}
                   className="group rounded-card border border-border bg-card p-3 shadow-card transition-shadow duration-200 ease-out hover:shadow-card-hover"
                 >
-                  <div className="mb-2 flex aspect-square items-center justify-center rounded-lg bg-muted">
-                    <span className="text-4xl">{viewedProduct.emoji}</span>
+                  <div className="relative mb-2 flex aspect-square items-center justify-center rounded-lg bg-muted">
+                    <ProductImage image={viewedProduct.images?.[0] ?? viewedProduct.emoji ?? ''} name={viewedProduct.name} />
                   </div>
                   <p className="truncate text-xs font-medium uppercase tracking-wider text-muted-foreground">{viewedProduct.brand}</p>
                   <h3 className="line-clamp-2 text-sm font-medium transition-colors duration-200 ease-out group-hover:text-primary-strong">
                     {viewedProduct.name}
                   </h3>
-                  <p className="mt-1 text-sm font-semibold tabular-nums text-primary-strong">{formatPrice(viewedProduct.price)}</p>
+                  <p className="mt-1 text-sm font-semibold tabular-nums text-primary-strong">{viewedProduct.price != null ? formatPrice(viewedProduct.price, viewedProduct.currency ?? 'USD') : 'Price on Request'}</p>
                 </Link>
               ))}
           </div>

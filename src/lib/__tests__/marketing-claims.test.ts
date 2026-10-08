@@ -410,7 +410,10 @@ describe('Marketing claims are derived from the data', () => {
     // the same defect as a claim that is too generous, just in the other
     // direction. The most expensive product has to clear the threshold on its own.
     it('announces a threshold at least one real cart can actually reach', () => {
-      const priciestProduct = products.reduce((priciest, product) =>
+      const pricedProducts = products.filter(
+        (p): p is (typeof products)[number] & { price: number } => p.price != null
+      );
+      const priciestProduct = pricedProducts.reduce((priciest, product) =>
         product.price > priciest.price ? product : priciest
       );
 

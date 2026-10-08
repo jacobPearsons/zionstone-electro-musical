@@ -10,6 +10,7 @@ import { Check, ChevronRight, MapPin, CreditCard, Truck, ArrowLeft, ShoppingBag,
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ShippingSelector, DeliveryEstimate } from '@/components/shipping';
+import { ProductImage } from '@/components/product';
 import { calculateShipping, formatDeliveryDate } from '@/lib/shipping';
 import { useCart } from '@/lib/cart-context';
 import { formatPrice } from '@/lib/utils';
@@ -452,7 +453,7 @@ export default function CheckoutPage() {
                 {items.map((item) => (
                   <div key={item.id} className="flex gap-3">
                     <div className="w-16 h-16 bg-muted rounded-card flex items-center justify-center text-2xl relative">
-                      {item.image}
+                      <ProductImage image={item.image} name={item.name} />
                       <span className="absolute -top-1 -right-1 w-5 h-5 bg-primary text-primary-foreground text-xs font-semibold tabular-nums rounded-full flex items-center justify-center">
                         {item.quantity}
                       </span>
@@ -461,7 +462,7 @@ export default function CheckoutPage() {
                       <p className="text-sm font-medium line-clamp-1">{item.name}</p>
                       <p className="text-xs text-muted-foreground">{item.brand}</p>
                     </div>
-                    <p className="text-sm font-semibold tabular-nums">{formatPrice(item.price)}</p>
+                    <p className="text-sm font-semibold tabular-nums">{formatPrice(item.price, item.currency ?? 'USD')}</p>
                   </div>
                 ))}
               </div>

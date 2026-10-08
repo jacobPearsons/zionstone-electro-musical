@@ -22,8 +22,8 @@ function isStoredProduct(value: unknown): value is Product {
     "brand" in value && typeof value.brand === "string" &&
     "slug" in value && typeof value.slug === "string" &&
     "category" in value && typeof value.category === "string" &&
-    "emoji" in value && typeof value.emoji === "string" &&
-    "price" in value && typeof value.price === "number" && Number.isFinite(value.price) &&
+    (!("emoji" in value) || value.emoji === undefined || typeof value.emoji === "string") &&
+    (!("price" in value) || value.price === undefined || typeof value.price === "number") &&
     "shipsInDays" in value && typeof value.shipsInDays === "number" && Number.isFinite(value.shipsInDays) &&
     "twoDayEligible" in value && typeof value.twoDayEligible === "boolean"
   );

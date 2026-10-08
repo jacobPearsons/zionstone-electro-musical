@@ -10,6 +10,11 @@ const nextConfig = {
         protocol: 'https',
         hostname: 'plus.unsplash.com',
       },
+      {
+        protocol: 'https',
+        hostname: 'cdn.jsdelivr.net',
+        pathname: '/gh/jacobPearsons/zionstone-electro-musical/**',
+      },
     ],
   },
 };

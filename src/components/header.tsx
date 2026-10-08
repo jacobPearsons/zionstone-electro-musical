@@ -103,6 +103,12 @@ export function Header() {
                 </Link>
               ))}
               <MegaMenu />
+              <Link
+                href="/contact"
+                className="relative rounded-sm text-sm font-medium text-muted-foreground transition-colors duration-150 after:absolute after:-bottom-1 after:left-0 after:h-px after:w-full after:origin-left after:scale-x-0 after:bg-primary after:transition-transform after:duration-150 hover:text-foreground hover:after:scale-x-100 focus-visible:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background focus-visible:after:scale-x-100"
+              >
+                Contact
+              </Link>
             </nav>
           </div>
 
@@ -231,6 +237,7 @@ export function Header() {
                   <span className="text-xs tabular-nums text-muted-foreground">{category.count}</span>
                 </Link>
               ))}
+              <Link href="/contact" className="flex items-center justify-between rounded-sm py-2 text-sm font-medium text-muted-foreground transition-colors duration-150 hover:bg-muted hover:text-foreground">Contact</Link>
               <div className="mt-3 border-t border-border pt-3">
                 <SignedOut>
                   <Link href="/sign-in" className="flex items-center rounded-sm py-2 text-sm font-medium text-muted-foreground transition-colors duration-150 hover:bg-muted hover:text-foreground">Sign In</Link>

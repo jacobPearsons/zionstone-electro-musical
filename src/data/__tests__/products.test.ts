@@ -135,9 +135,10 @@ describe('Sale and discount arithmetic', () => {
     it('never overstates or understates the cut it reports', () => {
       for (const product of products) {
         const percent = discountPercent(product);
-        if (percent === null || !isOnSale(product)) continue;
+        const price = product.price;
+        if (percent === null || !isOnSale(product) || price == null) continue;
 
-        const actual = (1 - product.price / (product.originalPrice as number)) * 100;
+        const actual = (1 - price / (product.originalPrice as number)) * 100;
 
         expect(percent).toBeGreaterThanOrEqual(Math.floor(actual));
         expect(percent).toBeLessThanOrEqual(Math.ceil(actual));

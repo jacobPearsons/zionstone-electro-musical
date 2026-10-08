@@ -1,16 +1,26 @@
 import Link from "next/link";
 import { ShippingBadge } from "@/components/shipping";
-import { AddToCartButton } from "@/components/product";
+import { AddToCartButton, ProductImage, ContactOwnerButton } from "@/components/product";
 import { HeroCarousel } from "@/components/HeroCarousel";
 import { ValueProps } from "@/components/ValueProps";
-import { products, isOnSale, discountPercent, getSaleProducts, maxDiscountPercent } from "@/data/products";
+import { products, isOnSale, discountPercent, getSaleProducts, maxDiscountPercent, getProductBySlug } from "@/data/products";
 import { CATEGORIES } from "@/data/categories";
 import { formatPrice } from "@/lib/utils";
 import { FadeIn } from "@/components/ui/animated";
 
-const featuredProducts = products.slice(0, 4);
+const featuredSlugs = [
+  'krk-rokit-5-g4-powered-studio-monitor',
+  'shure-sm58-legendary-professional-cardioid-dynamic-vocal-microphone',
+  'yamaha-psr-sx720-digital-keyboard',
+  'behringer-wing-compact-digital-mixing-console',
+];
+const featuredProducts = featuredSlugs
+  .map((slug) => getProductBySlug(slug))
+  .filter((p): p is NonNullable<typeof p> => Boolean(p));
 
-const deals = getSaleProducts().slice(0, 3);
+const deals = getSaleProducts()
+  .filter((deal): deal is typeof deal & { price: number } => deal.price != null)
+  .slice(0, 3);
 
 /**
  * "Up to N% off" is a storewide claim, so it is derived from the whole
@@ -52,7 +62,7 @@ export default function HomePage() {
                 >
                   <Link href={`/products/${product.slug}`}>
                     <div className="relative flex aspect-square items-center justify-center bg-muted">
-                      <span className="text-4xl">{product.emoji}</span>
+                      <ProductImage image={product.images?.[0] ?? product.emoji ?? ''} name={product.name} />
                       <div className="absolute top-3 left-3">
                         <ShippingBadge
                           shipsInDays={product.shipsInDays}
@@ -73,25 +83,36 @@ export default function HomePage() {
                         {product.name}
                       </h3>
                     </Link>
-                    <div className="flex items-baseline gap-2 mt-2">
-                      <span className="text-lg font-semibold tabular-nums text-primary-strong">{formatPrice(product.price)}</span>
-                      {isOnSale(product) && (
-                        <span className="text-sm tabular-nums text-muted-foreground line-through">
-                          {formatPrice(product.originalPrice as number)}
-                        </span>
-                      )}
-                    </div>
-                    <AddToCartButton
-                      product={{
-                        productId: product.id,
-                        name: product.name,
-                        price: product.price,
-                        image: product.emoji,
-                        quantity: 1,
-                        slug: product.slug,
-                        brand: product.brand,
-                      }}
-                    />
+                    {product.price != null ? (
+                      <div className="flex items-baseline gap-2 mt-2">
+                        <span className="text-lg font-semibold tabular-nums text-primary-strong">{formatPrice(product.price, product.currency ?? 'USD')}</span>
+                        {isOnSale(product) && (
+                          <span className="text-sm tabular-nums text-muted-foreground line-through">
+                            {formatPrice(product.originalPrice as number, product.currency ?? 'USD')}
+                          </span>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="flex items-baseline gap-2 mt-2">
+                        <span className="text-lg font-semibold tabular-nums text-primary-strong">Price on Request</span>
+                      </div>
+                    )}
+                    {product.price != null ? (
+                      <AddToCartButton
+                        product={{
+                          productId: product.id,
+                          name: product.name,
+                          price: product.price,
+                          image: product.images?.[0] ?? product.emoji ?? '',
+                          quantity: 1,
+                          slug: product.slug,
+                          brand: product.brand,
+                          currency: product.currency,
+                        }}
+                      />
+                    ) : (
+                      <ContactOwnerButton productName={product.name} productSlug={product.slug} />
+                    )}
                   </div>
                 </div>
               </FadeIn>

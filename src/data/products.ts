@@ -1,5 +1,9 @@
 export type CompatibilityCategory = 'cases' | 'stands' | 'bags' | 'cables' | 'accessories';
 
+import { newProducts } from './new-products';
+
+export type ProductCurrency = 'USD' | 'NGN';
+
 export interface ProductSpecs {
   general?: Record<string, string>;
   dimensions?: Record<string, string>;
@@ -12,15 +16,19 @@ export interface Product {
   id: string;
   name: string;
   brand: string;
-  price: number;
+  /** Absent for "Price on Request" items, which lead with a contact-owner CTA. */
+  price?: number;
   originalPrice?: number;
+  /** Defaults to 'USD'. The owner-priced catalogue additions are in NGN. */
+  currency?: ProductCurrency;
   category: string;
   slug: string;
-  emoji: string;
+  /** Legacy emoji placeholder; new products carry real images instead. */
+  emoji?: string;
   shipsInDays: number;
   twoDayEligible: boolean;
-  rating: number;
-  reviews: number;
+  rating?: number;
+  reviews?: number;
   description?: string;
   features?: string[];
   inventory?: number;
@@ -29,7 +37,7 @@ export interface Product {
   compatibility?: CompatibilityCategory[];
 }
 
-export const products: Product[] = [
+const baseProducts: Product[] = [
   {
     id: "1",
     name: "Fender Stratocaster Player",
@@ -428,13 +436,20 @@ export const products: Product[] = [
   }
 ];
 
+/** The live catalogue: the legacy demo products plus the brand-assets additions. */
+export const products: Product[] = [...baseProducts, ...newProducts];
+
 export function getProductBySlug(slug: string): Product | undefined {
   return products.find(p => p.slug === slug);
 }
 
 /** A product is on sale only when a higher originalPrice is actually recorded. */
 export function isOnSale(product: Product): boolean {
-  return typeof product.originalPrice === 'number' && product.originalPrice > product.price;
+  return (
+    typeof product.originalPrice === 'number' &&
+    product.price != null &&
+    product.originalPrice > product.price
+  );
 }
 
 export function getSaleProducts(): Product[] {
@@ -443,8 +458,10 @@ export function getSaleProducts(): Product[] {
 
 /** Whole-number percentage off, or null when the product is not discounted. */
 export function discountPercent(product: Product): number | null {
-  if (!isOnSale(product)) return null;
-  return Math.round((1 - product.price / (product.originalPrice as number)) * 100);
+  const price = product.price;
+  const original = product.originalPrice;
+  if (price == null || original == null || original <= price) return null;
+  return Math.round((1 - price / original) * 100);
 }
 
 /**

@@ -4,6 +4,7 @@ import { X, Minus, Plus, ShoppingBag, Trash2 } from 'lucide-react';
 import Link from 'next/link';
 import { useCart } from '@/lib/cart-context';
 import { Button } from '@/components/ui/button';
+import { ProductImage } from '@/components/product';
 import { formatPrice } from '@/lib/utils';
 
 interface MiniCartProps {
@@ -58,8 +59,8 @@ export function MiniCart({ isOpen, onClose }: MiniCartProps) {
               <div className="space-y-4">
                 {items.map((item) => (
                   <div key={item.productId} className="flex gap-4">
-                    <div className="w-20 h-20 bg-muted rounded-lg flex items-center justify-center text-3xl">
-                      {item.image}
+                    <div className="relative w-20 h-20 bg-muted rounded-lg flex items-center justify-center overflow-hidden">
+                      <ProductImage image={item.image} name={item.name} />
                     </div>
                     <div className="flex-1">
                       <h3 className="text-sm font-medium tracking-tight line-clamp-2">{item.name}</h3>
@@ -87,7 +88,7 @@ export function MiniCart({ isOpen, onClose }: MiniCartProps) {
                           </Button>
                         </div>
                         <div className="flex items-center gap-3">
-                          <span className="text-sm font-semibold tabular-nums">{formatPrice(item.price * item.quantity)}</span>
+                          <span className="text-sm font-semibold tabular-nums">{formatPrice(item.price * item.quantity, item.currency ?? 'USD')}</span>
                           <button
                             onClick={() => removeItem(item.id)}
                             className="text-muted-foreground hover:text-destructive transition-colors duration-200 ease-out"

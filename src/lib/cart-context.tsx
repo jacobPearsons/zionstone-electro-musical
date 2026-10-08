@@ -13,6 +13,8 @@ export interface CartItem {
   quantity: number;
   slug?: string;
   brand?: string;
+  /** Matches the product's `currency` so line items price in the currency offered. */
+  currency?: string;
 }
 
 interface CartContextType {
@@ -37,7 +39,8 @@ function isCartItem(value: unknown): value is CartItem {
     "price" in value && typeof value.price === "number" && Number.isFinite(value.price) &&
     "quantity" in value && typeof value.quantity === "number" && Number.isFinite(value.quantity) &&
     (!("slug" in value) || value.slug === undefined || typeof value.slug === "string") &&
-    (!("brand" in value) || value.brand === undefined || typeof value.brand === "string")
+    (!("brand" in value) || value.brand === undefined || typeof value.brand === "string") &&
+    (!("currency" in value) || value.currency === undefined || typeof value.currency === "string")
   );
 }
 

@@ -7,6 +7,7 @@ import { useCart } from "@/lib/cart-context";
 import { Trash2, Plus, Minus, ShoppingBag, Truck } from "lucide-react";
 import { formatPrice } from "@/lib/utils";
 import { ShippingCalculator, DeliveryEstimate } from "@/components/shipping";
+import { ProductImage } from "@/components/product";
 import {
   calculateShipping,
   qualifiesForFreeShipping,
@@ -59,8 +60,8 @@ export default function CartPage() {
         <div className="lg:col-span-2 space-y-4">
           {items.map((item) => (
             <div key={item.id} className="flex flex-wrap items-start gap-4 rounded-card border border-border bg-card p-4 shadow-card">
-              <div className="w-24 h-24 flex-shrink-0 bg-muted rounded-card flex items-center justify-center">
-                <span className="text-4xl">{item.image}</span>
+              <div className="relative w-24 h-24 flex-shrink-0 bg-muted rounded-card flex items-center justify-center overflow-hidden">
+                <ProductImage image={item.image} name={item.name} />
               </div>
               <div className="flex-1 min-w-40">
                 {item.slug ? (
@@ -70,7 +71,7 @@ export default function CartPage() {
                 ) : (
                   <span className="font-semibold">{item.name}</span>
                 )}
-                <p className="text-sm tabular-nums text-muted-foreground mt-1">{formatPrice(item.price)}</p>
+                <p className="text-sm tabular-nums text-muted-foreground mt-1">{formatPrice(item.price, item.currency ?? 'USD')}</p>
                 <div className="flex flex-wrap items-center gap-2 sm:gap-4 mt-3">
                   <div className="flex flex-shrink-0 items-center overflow-hidden rounded-card border border-border">
                     <button
@@ -99,7 +100,7 @@ export default function CartPage() {
                 </div>
               </div>
               <div className="ml-auto text-right">
-                <p className="font-semibold tabular-nums">{formatPrice(item.price * item.quantity)}</p>
+                <p className="font-semibold tabular-nums">{formatPrice(item.price * item.quantity, item.currency ?? 'USD')}</p>
               </div>
             </div>
           ))}

@@ -50,3 +50,6 @@ worktrees/
 
 # stray credentials dump (duplicate of .env)
 problems.md
+
+# raw brand source material (duplicated into public/images/zionstone)
+brand-assets/

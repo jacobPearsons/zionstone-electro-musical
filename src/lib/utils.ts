@@ -5,11 +5,21 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-export function formatPrice(price: number | string): string {
+export function formatPrice(price: number | string, currency: string = "USD"): string {
+  const amount = Number(price);
+  // NGN is formatted by hand so the server (Node ICU, which prints "NGN…")
+  // and the browser (which prints "₦") cannot serve different strings to the
+  // same screen. A hydration mismatch would blink the price twice.
+  if (currency === "NGN") {
+    return `₦${amount.toLocaleString("en-US", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    })}`;
+  }
   return new Intl.NumberFormat("en-US", {
     style: "currency",
-    currency: "USD",
-  }).format(Number(price));
+    currency,
+  }).format(amount);
 }
 
 /** Reads a JSON array from localStorage, returning [] on any failure and dropping entries that fail `isValid`. */

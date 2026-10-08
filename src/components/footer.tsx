@@ -3,6 +3,7 @@ import Image from "next/image";
 import { SignedIn, SignedOut } from "@clerk/nextjs";
 import { Newsletter } from "./Newsletter";
 import { CATEGORIES } from "@/data/categories";
+import { OWNER_EMAIL } from "@/lib/contact";
 
 const linkClass =
   "text-muted-foreground transition-colors duration-150 hover:text-primary-strong/80 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background";
@@ -39,6 +40,11 @@ export function Footer() {
               <li>
                 <Link href="/products?sale=true" className={linkClass}>
                   Sale
+                </Link>
+              </li>
+              <li>
+                <Link href="/contact" className={linkClass}>
+                  Contact Us
                 </Link>
               </li>
             </ul>
@@ -92,6 +98,12 @@ export function Footer() {
         <div className="mt-8 flex flex-col items-center justify-between gap-4 border-t border-border pt-8">
           <p className="text-xs text-muted-foreground">
             &copy; {new Date().getFullYear()} Zionstone Electro Musical Store. All rights reserved.
+          </p>
+          <p className="text-xs text-muted-foreground">
+            Questions?{' '}
+            <Link href={`mailto:${OWNER_EMAIL}`} className={linkClass}>
+              {OWNER_EMAIL}
+            </Link>
           </p>
         </div>
       </div>
