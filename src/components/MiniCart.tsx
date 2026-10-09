@@ -88,7 +88,7 @@ export function MiniCart({ isOpen, onClose }: MiniCartProps) {
                           </Button>
                         </div>
                         <div className="flex items-center gap-3">
-                          <span className="text-sm font-semibold tabular-nums">{formatPrice(item.price * item.quantity, item.currency ?? 'USD')}</span>
+                          <span className="text-sm font-semibold tabular-nums">{formatPrice(item.price * item.quantity, item.currency ?? 'NGN')}</span>
                           <button
                             onClick={() => removeItem(item.id)}
                             className="text-muted-foreground hover:text-destructive transition-colors duration-200 ease-out"
@@ -114,6 +114,7 @@ export function MiniCart({ isOpen, onClose }: MiniCartProps) {
               <p className="text-sm text-muted-foreground mb-4">
                 Shipping and taxes calculated at checkout
               </p>
+              <p className="text-xs text-muted-foreground mb-4">Pay securely with Paystack</p>
               <div className="space-y-2">
                 <Button asChild className="w-full" onClick={onClose}>
                   <Link href="/checkout">Checkout</Link>

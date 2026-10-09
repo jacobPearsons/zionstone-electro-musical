@@ -14,15 +14,14 @@ import {
   FREE_SHIPPING_THRESHOLD,
   STANDARD_SHIPPING_FALLBACK,
 } from "@/lib/shipping";
-import { promoDiscount, type PromoCode } from "@/lib/promo-codes";
+import { promoDiscount } from "@/lib/promo-codes";
 import { PromoCodeInput } from "@/components/PromoCodeInput";
 import type { ShippingMethod } from "@/types/shipping";
 
 export default function CartPage() {
-  const { items, removeItem, updateQuantity, totalPrice, clearCart } = useCart();
+  const { items, removeItem, updateQuantity, totalPrice, clearCart, promo, setPromo } = useCart();
   const [selectedShipping, setSelectedShipping] = useState<ShippingMethod | null>(null);
   const [estimatedDelivery, setEstimatedDelivery] = useState<string | null>(null);
-  const [promo, setPromo] = useState<PromoCode | null>(null);
 
   // The promo contributes a rate, not an amount: the saving is always derived
   // from the live subtotal, and `promoDiscount` clamps it to the subtotal so a
@@ -71,7 +70,7 @@ export default function CartPage() {
                 ) : (
                   <span className="font-semibold">{item.name}</span>
                 )}
-                <p className="text-sm tabular-nums text-muted-foreground mt-1">{formatPrice(item.price, item.currency ?? 'USD')}</p>
+                <p className="text-sm tabular-nums text-muted-foreground mt-1">{formatPrice(item.price, item.currency ?? 'NGN')}</p>
                 <div className="flex flex-wrap items-center gap-2 sm:gap-4 mt-3">
                   <div className="flex flex-shrink-0 items-center overflow-hidden rounded-card border border-border">
                     <button
@@ -100,7 +99,7 @@ export default function CartPage() {
                 </div>
               </div>
               <div className="ml-auto text-right">
-                <p className="font-semibold tabular-nums">{formatPrice(item.price * item.quantity, item.currency ?? 'USD')}</p>
+                <p className="font-semibold tabular-nums">{formatPrice(item.price * item.quantity, item.currency ?? 'NGN')}</p>
               </div>
             </div>
           ))}
@@ -131,7 +130,7 @@ export default function CartPage() {
             </div>
             
             <div className="space-y-3 mb-6">
-              <PromoCodeInput onApply={setPromo} subtotal={totalPrice} />
+              <PromoCodeInput onApply={(applied) => setPromo(applied?.code ?? null)} subtotal={totalPrice} />
 
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">Subtotal</span>
@@ -168,6 +167,7 @@ export default function CartPage() {
             <p className="text-xs text-muted-foreground text-center mt-4">
               Free shipping on orders over {formatPrice(FREE_SHIPPING_THRESHOLD)}
             </p>
+            <p className="text-xs text-muted-foreground text-center mt-2">Pay securely with Paystack</p>
           </div>
         </div>
       </div>

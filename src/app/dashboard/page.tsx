@@ -7,7 +7,7 @@ import { toast } from 'sonner';
 import { 
   User, Package, Heart, MapPin, CreditCard, Settings, 
   ChevronRight, Truck, Clock, CheckCircle, XCircle, Music,
-  ShoppingCart, Trash2
+  ShoppingCart, Trash2, Inbox
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useCart } from '@/lib/cart-context';
@@ -139,6 +139,22 @@ export default function DashboardPage() {
         </div>
         <UserButton afterSignOutUrl="/" />
       </div>
+
+      <Link
+        href="/dashboard/queue"
+        className="mb-8 flex items-center justify-between gap-4 rounded-card border border-border bg-card p-6 shadow-card transition-colors duration-200 ease-out hover:bg-muted"
+      >
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 bg-muted rounded-card flex items-center justify-center">
+            <Inbox className="w-5 h-5 text-foreground" />
+          </div>
+          <div>
+            <p className="font-medium">Review product submissions</p>
+            <p className="text-sm text-muted-foreground">Approve or reject gear submitted for sale.</p>
+          </div>
+        </div>
+        <ChevronRight className="w-5 h-5 text-muted-foreground" />
+      </Link>
 
       {/* Quick Stats */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">

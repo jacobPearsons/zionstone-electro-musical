@@ -2,7 +2,7 @@ export type CompatibilityCategory = 'cases' | 'stands' | 'bags' | 'cables' | 'ac
 
 import { newProducts } from './new-products';
 
-export type ProductCurrency = 'USD' | 'NGN';
+export type ProductCurrency = 'NGN';
 
 export interface ProductSpecs {
   general?: Record<string, string>;
@@ -19,7 +19,7 @@ export interface Product {
   /** Absent for "Price on Request" items, which lead with a contact-owner CTA. */
   price?: number;
   originalPrice?: number;
-  /** Defaults to 'USD'. The owner-priced catalogue additions are in NGN. */
+  /** The whole catalogue prices in NGN. */
   currency?: ProductCurrency;
   category: string;
   slug: string;
@@ -42,8 +42,9 @@ const baseProducts: Product[] = [
     id: "1",
     name: "Fender Stratocaster Player",
     brand: "Fender",
-    price: 849,
-    originalPrice: 999,
+    price: 1_273_500,
+    originalPrice: 1_498_500,
+    currency: 'NGN',
     category: "guitars-basses",
     slug: "fender-stratocaster-player",
     emoji: "🎸",
@@ -96,7 +97,8 @@ const baseProducts: Product[] = [
     id: "2",
     name: "Gibson Les Paul Standard 50s",
     brand: "Gibson",
-    price: 2499,
+    price: 3_748_500,
+    currency: 'NGN',
     category: "guitars-basses",
     slug: "gibson-les-paul-standard",
     emoji: "🎸",
@@ -119,7 +121,8 @@ const baseProducts: Product[] = [
     id: "3",
     name: "Korg Minilogue XD",
     brand: "Korg",
-    price: 599,
+    price: 898_500,
+    currency: 'NGN',
     category: "keyboards-synths",
     slug: "korg-minilogue-xd",
     emoji: "🎹",
@@ -142,7 +145,8 @@ const baseProducts: Product[] = [
     id: "4",
     name: "Moog Subsequent 37",
     brand: "Moog",
-    price: 1599,
+    price: 2_398_500,
+    currency: 'NGN',
     category: "keyboards-synths",
     slug: "moog-subsequent-37",
     emoji: "🎹",
@@ -165,8 +169,9 @@ const baseProducts: Product[] = [
     id: "5",
     name: "Focusrite Scarlett 2i2 3rd Gen",
     brand: "Focusrite",
-    price: 169,
-    originalPrice: 199,
+    price: 253_500,
+    originalPrice: 298_500,
+    currency: 'NGN',
     category: "recording-gear",
     slug: "focusrite-scarlett-2i2",
     emoji: "🎤",
@@ -189,7 +194,8 @@ const baseProducts: Product[] = [
     id: "6",
     name: "Universal Audio Apollo Twin X Duo",
     brand: "Universal Audio",
-    price: 1299,
+    price: 1_948_500,
+    currency: 'NGN',
     category: "recording-gear",
     slug: "ua-apollo-twin-x",
     emoji: "🎤",
@@ -212,7 +218,8 @@ const baseProducts: Product[] = [
     id: "7",
     name: "Shure SM7B",
     brand: "Shure",
-    price: 399,
+    price: 598_500,
+    currency: 'NGN',
     category: "recording-gear",
     slug: "shure-sm7b",
     emoji: "🎙️",
@@ -235,8 +242,9 @@ const baseProducts: Product[] = [
     id: "8",
     name: "Audio-Technica ATH-M50x",
     brand: "Audio-Technica",
-    price: 149,
-    originalPrice: 189,
+    price: 223_500,
+    originalPrice: 283_500,
+    currency: 'NGN',
     category: "audio-equipment",
     slug: "ath-m50x",
     emoji: "🎧",
@@ -259,7 +267,8 @@ const baseProducts: Product[] = [
     id: "9",
     name: "Yamaha HS8 Studio Monitors",
     brand: "Yamaha",
-    price: 499,
+    price: 748_500,
+    currency: 'NGN',
     category: "audio-equipment",
     slug: "yamaha-hs8",
     emoji: "🔊",
@@ -282,7 +291,8 @@ const baseProducts: Product[] = [
     id: "10",
     name: "Roland TD-17KVX V-Drums",
     brand: "Roland",
-    price: 1599,
+    price: 2_398_500,
+    currency: 'NGN',
     category: "drums-percussion",
     slug: "roland-td-17kvx",
     emoji: "🥁",
@@ -305,7 +315,8 @@ const baseProducts: Product[] = [
     id: "11",
     name: "Nord Stage 3 88",
     brand: "Nord",
-    price: 3799,
+    price: 5_698_500,
+    currency: 'NGN',
     category: "keyboards-synths",
     slug: "nord-stage-3",
     emoji: "🎹",
@@ -328,7 +339,8 @@ const baseProducts: Product[] = [
     id: "12",
     name: "Fender Jazz Bass Player",
     brand: "Fender",
-    price: 899,
+    price: 1_348_500,
+    currency: 'NGN',
     category: "guitars-basses",
     slug: "fender-jazz-bass",
     emoji: "🎸",
@@ -351,8 +363,9 @@ const baseProducts: Product[] = [
     id: "13",
     name: "PSR-SX600 61-Key Arranger Workstation",
     brand: "Yamaha",
-    price: 1099,
-    originalPrice: 1399,
+    price: 1_648_500,
+    originalPrice: 2_098_500,
+    currency: 'NGN',
     category: "keyboards-synths",
     slug: "yamaha-psr-sx600-61-key-arranger-workstation",
     emoji: "🎹",
@@ -384,8 +397,9 @@ const baseProducts: Product[] = [
     id: "14",
     name: "SPD-SX Limited Edition Electronic Percussion Pad",
     brand: "Roland",
-    price: 799,
-    originalPrice: 999,
+    price: 1_198_500,
+    originalPrice: 1_498_500,
+    currency: 'NGN',
     category: "drums-percussion",
     slug: "roland-spd-sx-limited-edition",
     emoji: "🥁",
@@ -491,8 +505,8 @@ export function getRelatedProducts(product: Product, limit: number = 4): Product
 //   id: "NEW_ID",
 //   name: "Product Name",
 //   brand: "Brand Name",
-//   price: 999,
-//   originalPrice: 1299, // Optional - for discounts
+//   price: 1_498_500,
+//   originalPrice: 1_948_500, // Optional - for discounts
 //   category: "guitars-basses", // See categories below
 //   slug: "product-slug",
 //   emoji: "🎸", // See emoji guide below

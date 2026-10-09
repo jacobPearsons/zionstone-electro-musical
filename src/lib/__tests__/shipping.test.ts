@@ -182,36 +182,37 @@ describe('Shipping Module', () => {
       const express = SHIPPING_METHODS.find(m => m.id === 'exp');
       const overnight = SHIPPING_METHODS.find(m => m.id === 'overn');
       
-      expect(standard?.price).toBe(5.99);
-      expect(express?.price).toBe(12.99);
-      expect(overnight?.price).toBe(24.99);
+      expect(standard?.price).toBe(8_985);
+      expect(express?.price).toBe(19_485);
+      expect(overnight?.price).toBe(37_485);
     });
   });
 
   /**
    * The free-shipping promise, and the 2-day badge that shipped as a lie.
    *
-   * These two were the store's remaining false claims: a "$50 free shipping"
-   * line while the real threshold was $99, and an unconditional "2-Day Shipping"
+   * These two were the store's remaining false claims: a "₦50,000 free shipping"
+   * line while the real threshold was ₦148,500, and an unconditional "2-Day
+   * Shipping"
    * badge on products that take three days. The constants now have one owner
    * (`FREE_SHIPPING_THRESHOLD`, `getShippingBadgeText`) and the job of these
    * tests is to make the boundary and the badge gate impossible to regress.
    */
   describe('FREE_SHIPPING_THRESHOLD', () => {
     // Invariant: the number is interpolated into money copy in three places.
-    // NaN, Infinity or a fractional value would render "$NaN" or "$99.50..." to a
+    // NaN, Infinity or a fractional value would render "₦NaN" or "₦148,500.50..." to a
     // customer, and a 0 or negative threshold would promise free shipping on an
     // empty cart.
-    it('is a positive whole number of dollars', () => {
+    it('is a positive whole number of naira', () => {
       expect(Number.isFinite(FREE_SHIPPING_THRESHOLD)).toBe(true);
       expect(Number.isInteger(FREE_SHIPPING_THRESHOLD)).toBe(true);
       expect(FREE_SHIPPING_THRESHOLD).toBeGreaterThan(0);
     });
 
-    // Invariant: "over $99" has to mean strictly more than $99, so a $99.00 cart
-    // is still charged. This is the off-by-one the boundary exists to pin: the
-    // comparison has to be `>=` against the threshold, and the copy has to say
-    // "over", not "at".
+    // Invariant: "over ₦148,500" has to mean strictly more than ₦148,500, so a
+    // ₦148,500.00 cart is still charged. This is the off-by-one the boundary
+    // exists to pin: the comparison has to be `>=` against the threshold, and the
+    // copy has to say "over", not "at".
     it('is not met one cent below the threshold', () => {
       expect(qualifiesForFreeShipping(0)).toBe(false);
       expect(qualifiesForFreeShipping(1)).toBe(false);
@@ -232,8 +233,8 @@ describe('Shipping Module', () => {
     });
 
     // Invariant: a fractional comparison must not split hairs the copy does not.
-    // Cents are the unit the threshold is expressed in, so $98.9999 has to fail
-    // and $99.0001 has to pass, with no gap in between.
+    // Kobo are the unit the threshold is expressed in, so ₦148,499.9999 has to
+    // fail and ₦148,500.0001 has to pass, with no gap in between.
     it('has no gap across a cent either side of the threshold', () => {
       expect(qualifiesForFreeShipping(FREE_SHIPPING_THRESHOLD - 0.0001)).toBe(false);
       expect(qualifiesForFreeShipping(FREE_SHIPPING_THRESHOLD + 0.0001)).toBe(true);

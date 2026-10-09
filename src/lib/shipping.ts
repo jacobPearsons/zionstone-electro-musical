@@ -106,7 +106,7 @@ const ZONE_MAP: Record<string, ShippingZone> = {
 const TWO_DAY_ELIGIBLE_ZONES: ShippingZone[] = ['west-coast', 'southwest', 'mountain', 'midwest'];
 
 /**
- * The one free-shipping promise in the store, in dollars.
+ * The one free-shipping promise in the store, in naira (₦148,500 = 99 × 1500).
  *
  * `src/app/layout.tsx` (announcement bar) and `src/app/cart/page.tsx` (the
  * summary that gates the money) both read this, so a customer can never be
@@ -114,10 +114,10 @@ const TWO_DAY_ELIGIBLE_ZONES: ShippingZone[] = ['west-coast', 'southwest', 'moun
  * merchandise subtotal *before* any promo code, so applying a discount never
  * costs a customer the free shipping they were already promised.
  */
-export const FREE_SHIPPING_THRESHOLD = 99;
+export const FREE_SHIPPING_THRESHOLD = 148_500;
 
 /** Charged when the cart is under `FREE_SHIPPING_THRESHOLD` and no method has been chosen. */
-export const STANDARD_SHIPPING_FALLBACK = 9.99;
+export const STANDARD_SHIPPING_FALLBACK = 14_985;
 
 export function qualifiesForFreeShipping(merchandiseSubtotal: number): boolean {
   return merchandiseSubtotal >= FREE_SHIPPING_THRESHOLD;
@@ -127,21 +127,21 @@ export const SHIPPING_METHODS: ShippingMethod[] = [
   {
     id: 'std',
     name: 'Standard Shipping',
-    price: 5.99,
+    price: 8_985,
     estimatedDays: 5,
     isTwoDayEligible: false,
   },
   {
     id: 'exp',
     name: 'Express Shipping',
-    price: 12.99,
+    price: 19_485,
     estimatedDays: 2,
     isTwoDayEligible: true,
   },
   {
     id: 'overn',
     name: 'Overnight Shipping',
-    price: 24.99,
+    price: 37_485,
     estimatedDays: 1,
     isTwoDayEligible: true,
   },

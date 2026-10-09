@@ -171,14 +171,14 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug: 
               here; everything else in the column stays on neutral or muted. */}
           {product.price != null ? (
             <div className="flex items-baseline gap-4 mb-4">
-              <span className="text-3xl font-semibold tabular-nums tracking-tight text-primary">{formatPrice(product.price, product.currency ?? 'USD')}</span>
+              <span className="text-3xl font-semibold tabular-nums tracking-tight text-primary">{formatPrice(product.price, product.currency ?? 'NGN')}</span>
               {product.originalPrice && product.originalPrice > product.price && (
                 <>
                   <span className="text-xl tabular-nums text-muted-foreground line-through">
-                    {formatPrice(product.originalPrice, product.currency ?? 'USD')}
+                    {formatPrice(product.originalPrice, product.currency ?? 'NGN')}
                   </span>
                   <span className="rounded-full bg-destructive/10 px-2 py-1 text-sm font-medium text-destructive">
-                    Save {formatPrice(product.originalPrice - product.price, product.currency ?? 'USD')}
+                    Save {formatPrice(product.originalPrice - product.price, product.currency ?? 'NGN')}
                   </span>
                 </>
               )}
@@ -378,7 +378,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug: 
                   <h3 className="line-clamp-2 font-semibold tracking-tight transition-colors duration-200 ease-out group-hover:text-primary-strong">
                     {relatedProduct.name}
                   </h3>
-                  <p className="mt-2 text-lg font-semibold tabular-nums text-primary-strong">{relatedProduct.price != null ? formatPrice(relatedProduct.price, relatedProduct.currency ?? 'USD') : 'Price on Request'}</p>
+                  <p className="mt-2 text-lg font-semibold tabular-nums text-primary-strong">{relatedProduct.price != null ? formatPrice(relatedProduct.price, relatedProduct.currency ?? 'NGN') : 'Price on Request'}</p>
                 </div>
               </Link>
             ))}
@@ -410,7 +410,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug: 
                   <h3 className="line-clamp-2 text-sm font-medium transition-colors duration-200 ease-out group-hover:text-primary-strong">
                     {viewedProduct.name}
                   </h3>
-                  <p className="mt-1 text-sm font-semibold tabular-nums text-primary-strong">{viewedProduct.price != null ? formatPrice(viewedProduct.price, viewedProduct.currency ?? 'USD') : 'Price on Request'}</p>
+                  <p className="mt-1 text-sm font-semibold tabular-nums text-primary-strong">{viewedProduct.price != null ? formatPrice(viewedProduct.price, viewedProduct.currency ?? 'NGN') : 'Price on Request'}</p>
                 </Link>
               ))}
           </div>

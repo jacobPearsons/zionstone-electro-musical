@@ -2,7 +2,7 @@
  * Promo codes, as a pure module so the arithmetic can be tested without a DOM.
  *
  * The codes are **rates**, not flat amounts: the original implementation
- * subtracted a hardcoded `20` / `10` dollars from a $1,899 instrument, which
+ * subtracted a hardcoded `20` / `10` naira from a ₦2,848,500 instrument, which
  * read as an amount rather than a discount and made the saving trivial on
  * cheap gear and invisible on expensive gear. `percent` keeps the promise
  * proportional to what is actually in the cart.

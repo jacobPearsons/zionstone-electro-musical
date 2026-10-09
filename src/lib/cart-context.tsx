@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { readStoredArray } from "@/lib/utils";
+import { findPromoCode, type PromoCode } from "@/lib/promo-codes";
 
 export interface CartItem {
   id: string;
@@ -25,6 +26,13 @@ interface CartContextType {
   clearCart: () => void;
   totalItems: number;
   totalPrice: number;
+  /** The promo code in force, `null` when none. Shared so cart, checkout, and
+   *  payment see the same discount instead of each holding local state. */
+  promo: PromoCode | null;
+  /** Canonical valid code string, for the server to re-validate at charge time. */
+  promoCode?: string;
+  /** Applies or clears a code; invalid input stores nothing. */
+  setPromo: (code: string | null) => void;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
@@ -47,9 +55,12 @@ function isCartItem(value: unknown): value is CartItem {
 export function CartProvider({ children }: { children: ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([]);
   const [hydrated, setHydrated] = useState(false);
+  const [promoCode, setPromoCode] = useState<string | null>(null);
 
   useEffect(() => {
     setItems(readStoredArray<CartItem>("cart", isCartItem));
+    const stored = localStorage.getItem("promo_code");
+    setPromoCode(stored ? findPromoCode(stored)?.code ?? null : null);
     setHydrated(true);
   }, []);
 
@@ -57,6 +68,15 @@ export function CartProvider({ children }: { children: ReactNode }) {
     if (!hydrated) return;
     localStorage.setItem("cart", JSON.stringify(items));
   }, [items, hydrated]);
+
+  useEffect(() => {
+    if (!hydrated) return;
+    if (promoCode) {
+      localStorage.setItem("promo_code", promoCode);
+    } else {
+      localStorage.removeItem("promo_code");
+    }
+  }, [promoCode, hydrated]);
 
   const addItem = (item: Omit<CartItem, "id">) => {
     setItems((prev) => {
@@ -84,11 +104,31 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   const clearCart = () => setItems([]);
 
+  // Only a valid, known code is kept — a mistyped input clears rather than
+  // persisting something the server would reject at charge time.
+  const promo = promoCode ? findPromoCode(promoCode) : null;
+  const setPromo = (code: string | null) => {
+    setPromoCode(code ? findPromoCode(code)?.code ?? null : null);
+  };
+
   const totalItems = items.reduce((sum, item) => sum + item.quantity, 0);
   const totalPrice = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
   return (
-    <CartContext.Provider value={{ items, addItem, removeItem, updateQuantity, clearCart, totalItems, totalPrice }}>
+    <CartContext.Provider
+      value={{
+        items,
+        addItem,
+        removeItem,
+        updateQuantity,
+        clearCart,
+        totalItems,
+        totalPrice,
+        promo,
+        promoCode: promo?.code,
+        setPromo,
+      }}
+    >
       {children}
     </CartContext.Provider>
   );

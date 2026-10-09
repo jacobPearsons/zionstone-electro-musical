@@ -8,8 +8,8 @@ import { formatPrice } from '@/lib/utils';
  * The honest-claims guard.
  *
  * This store shipped three false marketing claims: a "40% off" badge while the
- * catalogue topped out at 21%, a "$50 free shipping" line while the real
- * threshold was $99, and an unconditional "2-Day Shipping" strip on every
+ * catalogue topped out at 21%, a "₦50,000 free shipping" line while the real
+ * threshold was ₦148,500, and an unconditional "2-Day Shipping" strip on every
  * product page. All three were fixed by *deriving* the copy from the data, and
  * a derived claim cannot drift — but only as long as nobody replaces the
  * derivation with a literal. That is what this file guards.
@@ -38,10 +38,10 @@ import { formatPrice } from '@/lib/utils';
  *     makes the shipping scan safe against JSX expressions like
  *     `{formatPrice(FREE_SHIPPING_THRESHOLD)}`, where no `$` appears at all.)
  *  3. Price-filter bucket labels in `src/app/products/page.tsx`
- *     (`"Under $100"`, `"$100 - $300"`, …, `"Over $1000"`). These are filter
- *     facets, not promises, and they must stay literal so the facet boundaries
- *     are visible next to the `min`/`max` they filter on. They are also never on
- *     a line that mentions shipping, so rule B1 does not reach them.
+ *     (`"Under ₦150,000"`, `"₦150,000 - ₦450,000"`, …, `"Over ₦1,500,000"`). These
+ *     are filter facets, not promises, and they must stay literal so the facet
+ *     boundaries are visible next to the `min`/`max` they filter on. They are
+ *     also never on a line that mentions shipping, so rule B1 does not reach them.
  *  4. Comments. `HeroCarousel.tsx` deliberately quotes the old "Up to 40% Off"
  *     and "Free Shipping Included" copy in a block comment explaining why it was
  *     removed. That history is worth keeping, and a comment is not shipped to a
@@ -75,8 +75,8 @@ const NUMBER_BOUND_TO_DISCOUNT =
 const STRING_LITERAL = /'([^'\n]*)'|"([^"\n]*)"|`([^`]*)`/g;
 /** A word that turns a string into a discount claim. */
 const DISCOUNT_WORD = /\b(?:off|discount|discounts|save|saves|markdown|savings|deal)\b/i;
-/** A money literal: a `$` immediately followed by digits. Never an interpolation. */
-const MONEY_LITERAL = /\$\s?\d/;
+/** A money literal: a `₦` (or legacy `$`) immediately followed by digits. Never an interpolation. */
+const MONEY_LITERAL = /[₦$]\s?\d/;
 /** A two-day *delivery* claim — the wording of the badge that shipped as a lie. */
 const TWO_DAY_DELIVERY_CLAIM = /2[-\s]?\s?day/i;
 
@@ -93,7 +93,7 @@ function scanNumberInDiscountString(text: string): boolean {
  * that test, or this file is not doing what it claims.
  *
  * All entries are predicates rather than bare regexes, because two rules are
- * conjunctions: `$50` alone is fine everywhere, and `shipping` alone is fine
+ * conjunctions: `₦50,000` alone is fine everywhere, and `shipping` alone is fine
  * everywhere — it is only money *in* shipping copy that is the bug. Folding the
  * conjunction into the rule keeps each rule one value and stops the sensitivity
  * test from having to remember which extra condition each key needs.
@@ -107,7 +107,7 @@ const SCANS = {
   numberBoundToDiscount: (text: string) => NUMBER_BOUND_TO_DISCOUNT.test(text),
   /** `badge: 'Save 30% today',` — a number hidden in a string literal. */
   numberInDiscountString: (text: string) => scanNumberInDiscountString(text),
-  /** `Free shipping on orders over $50` — money in shipping copy. */
+  /** `Free shipping on orders over ₦50,000` — money in shipping copy. */
   moneyNextToShipping: (text: string) => /shipping/i.test(text) && MONEY_LITERAL.test(text),
   /** `2-Day Shipping` — a delivery claim (gated separately, not just banned). */
   twoDayDelivery: (text: string) => TWO_DAY_DELIVERY_CLAIM.test(text),
@@ -143,7 +143,7 @@ function tsxFilesUnder(directory: string): string[] {
 function stripComments(source: string): string {
   return source
     .replace(/\/\*[\s\S]*?\*\//g, block => block.replace(/[^\n]/g, ' '))
-    .replace(/(^|[^:])\/\/.*$/gm, '$1');
+    .replace(/(^|[^:])\/\/.*$/gm, (_match, prefix: string) => prefix);
 }
 
 /** Every line of live (comment-free) code in the scanned tree. */
@@ -364,7 +364,7 @@ describe('Marketing claims are derived from the data', () => {
 
     // Invariant: a claim that mentions free shipping has to read the one constant.
     // Without this, someone could delete the interpolation and ship a bare
-    // "Free Shipping" with no threshold at all — the "$50 free shipping" bug with
+    // "Free Shipping" with no threshold at all — the "₦50,000 free shipping" bug with
     // the number removed, which is just as false.
     it('derives every free-shipping claim from FREE_SHIPPING_THRESHOLD', () => {
       const claimingFiles = SCAN_DIRECTORIES.flatMap(tsxFilesUnder).filter(file =>
@@ -385,7 +385,7 @@ describe('Marketing claims are derived from the data', () => {
     });
 
     // Invariant: the constant has to reach the screen through `formatPrice`, or
-    // the copy renders `99` where it should read `$99`. Asserted by removing
+    // the copy renders `148500` where it should read `₦148,500`. Asserted by removing
     // every well-formed `formatPrice(FREE_SHIPPING_THRESHOLD)` call and then
     // requiring that no bare reference is left outside the import statements.
     it('formats the threshold as currency rather than interpolating it raw', () => {
@@ -558,7 +558,7 @@ describe('Marketing claims are derived from the data', () => {
         { copy: 'badge: "Up to 40% Off"', caughtBy: 'percentCeiling' },
         { copy: 'const deepestDiscount = 40;', caughtBy: 'numberBoundToDiscount' },
         { copy: "badge: 'Save 30% today',", caughtBy: 'numberInDiscountString' },
-        { copy: 'Free shipping on orders over $50', caughtBy: 'moneyNextToShipping' },
+        { copy: 'Free shipping on orders over ₦50,000', caughtBy: 'moneyNextToShipping' },
         { copy: '<p>2-Day Shipping</p>', caughtBy: 'twoDayDelivery' },
       ];
 
@@ -587,13 +587,13 @@ describe('Marketing claims are derived from the data', () => {
       expect(covered).toEqual(new Set(Object.keys(SCANS)));
     });
 
-    // Invariant: the conjunction rule is a conjunction. `$50` on its own is fine
+    // Invariant: the conjunction rule is a conjunction. `₦50,000` on its own is fine
     // (a price), and "shipping" on its own is fine (a filter label). Only money
     // *in* shipping copy is the bug, so pinning both negatives is what stops a
     // later "simplification" from turning this into either half.
     it('only flags money when the line is actually about shipping', () => {
-      expect(SCANS.moneyNextToShipping('Free shipping on orders over $50')).toBe(true);
-      expect(SCANS.moneyNextToShipping('Save $50 with code SAVE50')).toBe(false);
+      expect(SCANS.moneyNextToShipping('Free shipping on orders over ₦50,000')).toBe(true);
+      expect(SCANS.moneyNextToShipping('Save ₦50,000 with code SAVE50')).toBe(false);
       expect(SCANS.moneyNextToShipping('2-day shipping filter')).toBe(false);
     });
 
@@ -609,14 +609,15 @@ describe('Marketing claims are derived from the data', () => {
   });
 
   describe('the numbers the copy will actually show', () => {
-    // Invariant: the full round trip. The constant is 99, the formatter renders
-    // it as "$99", and a claim built from them reads "Free shipping on orders
-    // over $99". This is the string a customer sees, asserted as a string.
+    // Invariant: the full round trip. The constant is 148_500 (₦148,500 = the legacy
+    // 99 × 1500), the formatter renders it as "₦148,500", and a claim built from
+    // them reads "Free shipping on orders over ₦148,500". This is the string a
+    // customer sees, asserted as a string.
     it('renders the free-shipping promise the copy is built from', () => {
-      expect(FREE_SHIPPING_THRESHOLD).toBe(99);
-      expect(formatPrice(FREE_SHIPPING_THRESHOLD)).toBe('$99.00');
+      expect(FREE_SHIPPING_THRESHOLD).toBe(148_500);
+      expect(formatPrice(FREE_SHIPPING_THRESHOLD)).toBe('₦148,500.00');
       expect(`Free shipping on orders over ${formatPrice(FREE_SHIPPING_THRESHOLD)}`).toBe(
-        'Free shipping on orders over $99.00'
+        'Free shipping on orders over ₦148,500.00'
       );
     });
 

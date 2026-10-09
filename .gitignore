@@ -44,6 +44,9 @@ prisma/*.db-journal
 *.log
 .vercel
 
+# Filesystem order store (Paystack checkout drafts/records)
+/queue/
+
 # Worktrees
 .worktrees/
 worktrees/

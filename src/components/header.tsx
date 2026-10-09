@@ -104,6 +104,18 @@ export function Header() {
               ))}
               <MegaMenu />
               <Link
+                href="/categories"
+                className="relative rounded-sm text-sm font-medium text-muted-foreground transition-colors duration-150 after:absolute after:-bottom-1 after:left-0 after:h-px after:w-full after:origin-left after:scale-x-0 after:bg-primary after:transition-transform after:duration-150 hover:text-foreground hover:after:scale-x-100 focus-visible:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background focus-visible:after:scale-x-100"
+              >
+                Categories
+              </Link>
+              <Link
+                href="/about"
+                className="relative rounded-sm text-sm font-medium text-muted-foreground transition-colors duration-150 after:absolute after:-bottom-1 after:left-0 after:h-px after:w-full after:origin-left after:scale-x-0 after:bg-primary after:transition-transform after:duration-150 hover:text-foreground hover:after:scale-x-100 focus-visible:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background focus-visible:after:scale-x-100"
+              >
+                About
+              </Link>
+              <Link
                 href="/contact"
                 className="relative rounded-sm text-sm font-medium text-muted-foreground transition-colors duration-150 after:absolute after:-bottom-1 after:left-0 after:h-px after:w-full after:origin-left after:scale-x-0 after:bg-primary after:transition-transform after:duration-150 hover:text-foreground hover:after:scale-x-100 focus-visible:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background focus-visible:after:scale-x-100"
               >
@@ -227,6 +239,8 @@ export function Header() {
           <nav className="border-t border-border py-4 lg:hidden">
             <div className="flex flex-col gap-1">
               <Link href="/products" className="flex items-center justify-between rounded-sm py-2 text-sm font-medium text-muted-foreground transition-colors duration-150 hover:bg-muted hover:text-foreground">All products</Link>
+              <Link href="/categories" className="flex items-center justify-between rounded-sm py-2 text-sm font-medium text-muted-foreground transition-colors duration-150 hover:bg-muted hover:text-foreground">Categories</Link>
+              <Link href="/about" className="flex items-center justify-between rounded-sm py-2 text-sm font-medium text-muted-foreground transition-colors duration-150 hover:bg-muted hover:text-foreground">About</Link>
               {CATEGORIES.map((category) => (
                 <Link
                   key={category.slug}

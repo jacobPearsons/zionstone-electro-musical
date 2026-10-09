@@ -5,7 +5,15 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-export function formatPrice(price: number | string, currency: string = "USD"): string {
+/** The store's fixed conversion rate: every legacy USD catalogue price is ×1500. */
+export const NGN_PER_USD = 1500;
+
+/** Converts a USD amount to NGN at `NGN_PER_USD`, rounded to the nearest kobo pair (2 dp). */
+export function usdToNgn(usd: number): number {
+  return Math.round(usd * NGN_PER_USD * 100) / 100;
+}
+
+export function formatPrice(price: number | string, currency: string = "NGN"): string {
   const amount = Number(price);
   // NGN is formatted by hand so the server (Node ICU, which prints "NGN…")
   // and the browser (which prints "₦") cannot serve different strings to the

@@ -13,11 +13,11 @@ import { BRANDS, CATEGORIES, CATEGORY_SLUGS, categoryDisplayName } from '@/data/
 import { formatPrice } from '@/lib/utils';
 
 const priceRanges = [
-  { label: "Under $100", min: 0, max: 100 },
-  { label: "$100 - $300", min: 100, max: 300 },
-  { label: "$300 - $500", min: 300, max: 500 },
-  { label: "$500 - $1000", min: 500, max: 1000 },
-  { label: "Over $1000", min: 1000, max: Infinity },
+  { label: "Under ₦150,000", min: 0, max: 150_000 },
+  { label: "₦150,000 - ₦450,000", min: 150_000, max: 450_000 },
+  { label: "₦450,000 - ₦750,000", min: 450_000, max: 750_000 },
+  { label: "₦750,000 - ₦1,500,000", min: 750_000, max: 1_500_000 },
+  { label: "Over ₦1,500,000", min: 1_500_000, max: Infinity },
 ];
 
 function ProductsPageContent() {
@@ -147,6 +147,12 @@ function ProductsPageContent() {
             {selectedCategory && ` in ${categoryDisplayName(selectedCategory)}`}
             {saleOnly && ' on sale'}
           </p>
+          <Link
+            href="/sell"
+            className="mt-2 inline-flex items-center gap-1 text-sm font-medium text-primary-strong transition-colors duration-200 ease-out hover:underline"
+          >
+            Sell your gear <span aria-hidden="true">→</span>
+          </Link>
         </div>
         
         <div className="flex items-center gap-4 w-full md:w-auto">
@@ -435,10 +441,10 @@ function ProductsPageContent() {
                     )}
                     {product.price != null ? (
                       <div className="flex items-baseline gap-2 mt-2">
-                        <span className="text-lg font-semibold tabular-nums text-primary-strong">{formatPrice(product.price, product.currency ?? 'USD')}</span>
+                        <span className="text-lg font-semibold tabular-nums text-primary-strong">{formatPrice(product.price, product.currency ?? 'NGN')}</span>
                         {isOnSale(product) && (
                           <span className="text-sm tabular-nums text-muted-foreground line-through">
-                            {formatPrice(product.originalPrice as number, product.currency ?? 'USD')}
+                            {formatPrice(product.originalPrice as number, product.currency ?? 'NGN')}
                           </span>
                         )}
                       </div>

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Instagram, MessageCircle, Quote } from "lucide-react";
 import { ShippingBadge } from "@/components/shipping";
 import { AddToCartButton, ProductImage, ContactOwnerButton } from "@/components/product";
 import { HeroCarousel } from "@/components/HeroCarousel";
@@ -7,6 +8,43 @@ import { products, isOnSale, discountPercent, getSaleProducts, maxDiscountPercen
 import { CATEGORIES } from "@/data/categories";
 import { formatPrice } from "@/lib/utils";
 import { FadeIn } from "@/components/ui/animated";
+import { OWNER_PHONES, ownerWhatsAppHref } from "@/lib/contact";
+
+const INSTAGRAM_HANDLE = "Zionstoneelectro_musicals";
+const INSTAGRAM_URL = `https://instagram.com/${INSTAGRAM_HANDLE}`;
+
+const testimonials = [
+  {
+    quote:
+      "I found the perfect keyboard here. The team knew exactly what I needed and every piece of gear was genuine.",
+    name: "Oluwaseun A.",
+    city: "Lagos",
+  },
+  {
+    quote:
+      "They guided us to the right PA setup for our church. Trusted advice, and the sound across our services is transformed.",
+    name: "Pastor Emeka",
+    city: "Abuja",
+  },
+  {
+    quote:
+      "Their support with my home studio setup was excellent. Everything was connected and sounding great from day one.",
+    name: "Tunde B.",
+    city: "Port Harcourt",
+  },
+];
+
+const instagramTiles = [
+  "from-primary/30 to-primary/5",
+  "from-muted to-primary/15",
+  "from-primary/10 to-secondary",
+  "from-secondary to-primary/20",
+  "from-primary/25 to-muted",
+  "from-muted to-secondary",
+  "from-primary/15 to-primary/5",
+  "from-secondary to-muted",
+  "from-primary/20 to-secondary",
+];
 
 const featuredSlugs = [
   'krk-rokit-5-g4-powered-studio-monitor',
@@ -85,10 +123,10 @@ export default function HomePage() {
                     </Link>
                     {product.price != null ? (
                       <div className="flex items-baseline gap-2 mt-2">
-                        <span className="text-lg font-semibold tabular-nums text-primary-strong">{formatPrice(product.price, product.currency ?? 'USD')}</span>
+                        <span className="text-lg font-semibold tabular-nums text-primary-strong">{formatPrice(product.price, product.currency ?? 'NGN')}</span>
                         {isOnSale(product) && (
                           <span className="text-sm tabular-nums text-muted-foreground line-through">
-                            {formatPrice(product.originalPrice as number, product.currency ?? 'USD')}
+                            {formatPrice(product.originalPrice as number, product.currency ?? 'NGN')}
                           </span>
                         )}
                       </div>
@@ -213,6 +251,115 @@ export default function HomePage() {
               </FadeIn>
             ))}
           </div>
+        </div>
+      </section>
+
+      {/* Testimonials */}
+      <section className="py-16 md:py-24">
+        <div className="container mx-auto px-4">
+          <FadeIn>
+            <div className="mx-auto max-w-3xl text-center">
+              <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                Testimonials
+              </p>
+              <h2 className="mt-3 text-3xl font-semibold tracking-tight md:text-4xl">
+                What Our Customers Say
+              </h2>
+            </div>
+          </FadeIn>
+          <div className="mt-12 grid grid-cols-1 gap-6 md:grid-cols-3">
+            {testimonials.map((testimonial, index) => (
+              <FadeIn key={testimonial.name} delay={index * 0.1}>
+                <figure className="flex h-full flex-col rounded-card border border-border bg-card p-6 shadow-card">
+                  <Quote className="h-6 w-6 text-primary" aria-hidden="true" />
+                  <blockquote className="mt-4 flex-1 text-muted-foreground">
+                    {testimonial.quote}
+                  </blockquote>
+                  <figcaption className="mt-6 text-sm font-medium">
+                    {testimonial.name} <span className="text-muted-foreground">· {testimonial.city}</span>
+                  </figcaption>
+                </figure>
+              </FadeIn>
+            ))}
+          </div>
+          <FadeIn>
+            <p className="mt-10 text-center text-sm text-muted-foreground">
+              Have a story?{" "}
+              <a
+                href={ownerWhatsAppHref(
+                  OWNER_PHONES[0],
+                  "Hi Zionstone, I'd like to share my experience with you."
+                )}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-medium text-primary-strong underline-offset-4 transition-colors duration-200 ease-out hover:text-primary-strong/80 hover:underline"
+              >
+                Tell us
+              </a>
+            </p>
+          </FadeIn>
+        </div>
+      </section>
+
+      {/* Instagram */}
+      <section className="bg-muted py-16 md:py-24">
+        <div className="container mx-auto px-4">
+          <FadeIn>
+            <div className="mx-auto flex max-w-2xl flex-col items-center text-center">
+              <a
+                href={INSTAGRAM_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 rounded-pill bg-gradient-to-tr from-[#feda75] via-[#d62976] to-[#4f5bd5] p-[2px] focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+              >
+                <span className="inline-flex items-center gap-2 rounded-pill bg-background px-4 py-2">
+                  <Instagram className="h-5 w-5" aria-hidden="true" />
+                  <span className="font-medium">@{INSTAGRAM_HANDLE}</span>
+                </span>
+              </a>
+              <h2 className="mt-6 text-3xl font-semibold tracking-tight md:text-4xl">
+                Follow @{INSTAGRAM_HANDLE}
+              </h2>
+              <p className="mt-3 text-muted-foreground">
+                New arrivals, installs, and studio inspiration from around the store.
+              </p>
+            </div>
+          </FadeIn>
+          <FadeIn delay={0.1}>
+            <a
+              href={INSTAGRAM_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label={`Follow @${INSTAGRAM_HANDLE} on Instagram`}
+              className="relative mx-auto mt-10 inline-grid grid-cols-3 gap-2 focus-visible:outline-none"
+            >
+              {instagramTiles.map((tile, index) => (
+                <span
+                  key={index}
+                  aria-hidden="true"
+                  className={`h-16 w-16 rounded-lg bg-gradient-to-br sm:h-20 sm:w-20 ${tile}`}
+                />
+              ))}
+              <span className="pointer-events-none absolute inset-0 flex items-center justify-center">
+                <span className="flex h-14 w-14 items-center justify-center rounded-pill bg-gradient-to-tr from-[#feda75] via-[#d62976] to-[#4f5bd5] text-white shadow-card">
+                  <Instagram className="h-7 w-7" aria-hidden="true" />
+                </span>
+              </span>
+            </a>
+          </FadeIn>
+          <FadeIn delay={0.15}>
+            <p className="mt-8 text-center">
+              <a
+                href={INSTAGRAM_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 font-medium text-primary-strong underline-offset-4 transition-colors duration-200 ease-out hover:text-primary-strong/80 hover:underline"
+              >
+                <MessageCircle className="h-4 w-4" aria-hidden="true" />
+                Follow us on Instagram
+              </a>
+            </p>
+          </FadeIn>
         </div>
       </section>
     </div>

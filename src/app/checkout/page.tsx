@@ -6,13 +6,15 @@ import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Check, ChevronRight, MapPin, CreditCard, Truck, ArrowLeft, ShoppingBag, Wallet } from 'lucide-react';
+import { toast } from 'sonner';
+import { Check, ChevronRight, MapPin, CreditCard, Truck, ArrowLeft, ShoppingBag, Lock, ShieldCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ShippingSelector, DeliveryEstimate } from '@/components/shipping';
 import { ProductImage } from '@/components/product';
-import { calculateShipping, formatDeliveryDate } from '@/lib/shipping';
+import { calculateShipping, formatDeliveryDate, qualifiesForFreeShipping, FREE_SHIPPING_THRESHOLD } from '@/lib/shipping';
 import { useCart } from '@/lib/cart-context';
+import { promoDiscount } from '@/lib/promo-codes';
 import { formatPrice } from '@/lib/utils';
 import type { ShippingMethod } from '@/types/shipping';
 
@@ -28,15 +30,7 @@ const shippingSchema = z.object({
   phone: z.string().regex(/^\d{10}$/, 'Please enter a valid 10-digit phone number').optional().or(z.literal('')),
 });
 
-const paymentSchema = z.object({
-  cardNumber: z.string().regex(/^\d{16}$/, 'Please enter a valid 16-digit card number'),
-  cardExpiry: z.string().regex(/^(0[1-9]|1[0-2])\/\d{2}$/, 'Please use format MM/YY'),
-  cardCvc: z.string().regex(/^\d{3,4}$/, 'Please enter a valid CVC'),
-  cardName: z.string().min(2, 'Please enter the name on your card'),
-});
-
 type ShippingFormData = z.infer<typeof shippingSchema>;
-type PaymentFormData = z.infer<typeof paymentSchema>;
 
 const steps = [
   { id: 'shipping', name: 'Shipping', icon: MapPin },
@@ -54,10 +48,13 @@ const US_STATES = [
 
 export default function CheckoutPage() {
   const router = useRouter();
-  const { items, totalPrice } = useCart();
+  const { items, totalPrice, totalItems, promo, promoCode } = useCart();
   const [currentStep, setCurrentStep] = useState('shipping');
   const [selectedShipping, setSelectedShipping] = useState<ShippingMethod | null>(null);
   const [shippingCalculation, setShippingCalculation] = useState(() => calculateShipping('90210'));
+  const [email, setEmail] = useState('');
+  const [paymentError, setPaymentError] = useState<string | null>(null);
+  const [isPlacingOrder, setIsPlacingOrder] = useState(false);
 
   const shippingForm = useForm<ShippingFormData>({
     resolver: zodResolver(shippingSchema),
@@ -74,26 +71,22 @@ export default function CheckoutPage() {
     },
   });
 
-  const paymentForm = useForm<PaymentFormData>({
-    resolver: zodResolver(paymentSchema),
-    defaultValues: {
-      cardNumber: '',
-      cardExpiry: '',
-      cardCvc: '',
-      cardName: '',
-    },
-  });
-
   useEffect(() => {
     if (items.length === 0) {
       router.push('/cart');
     }
   }, [items, router]);
 
+  useEffect(() => {
+    if (currentStep !== 'payment') return;
+    setEmail((previous) => previous || shippingForm.getValues('email'));
+  }, [currentStep, shippingForm]);
+
   const subtotal = totalPrice;
-  const shippingCost = selectedShipping?.price || 0;
-  const tax = subtotal * 0.08;
-  const total = subtotal + shippingCost + tax;
+  const discount = promoDiscount(promo, subtotal);
+  const freeShipping = qualifiesForFreeShipping(subtotal);
+  const shippingCost = selectedShipping ? (freeShipping ? 0 : selectedShipping.price) : 0;
+  const total = subtotal - discount + shippingCost;
 
   const hasItems = items.length > 0;
 
@@ -108,21 +101,65 @@ export default function CheckoutPage() {
     }
   };
 
-  const nextStep = () => {
-    const currentIndex = steps.findIndex(s => s.id === currentStep);
-    if (currentIndex < steps.length - 1) {
-      setCurrentStep(steps[currentIndex + 1].id);
+  const currentStepIndex =
+    currentStep === 'review' ? steps.length : steps.findIndex(s => s.id === currentStep);
+
+  const handlePlaceOrder = async () => {
+    if (isPlacingOrder) return;
+
+    const emailValue = email.trim() || shippingForm.getValues('email').trim();
+    if (!emailValue || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailValue)) {
+      setPaymentError('Enter a valid email address to pay with Paystack.');
+      toast.error('Enter a valid email address to continue.');
+      return;
+    }
+
+    if (!selectedShipping) {
+      setPaymentError('Choose a delivery method before paying.');
+      return;
+    }
+
+    setPaymentError(null);
+    setIsPlacingOrder(true);
+
+    try {
+      const response = await fetch('/api/paystack/initialize', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          items: items.map((item) => ({ productId: item.productId, quantity: item.quantity })),
+          shippingMethodId: selectedShipping.id,
+          email: emailValue,
+          promoCode: promoCode || undefined,
+        }),
+      });
+
+      const data = (await response.json().catch(() => null)) as
+        | { ok: true; authorizationUrl: string; reference: string }
+        | { ok: false; error?: string }
+        | null;
+
+      if (!response.ok || !data || !data.ok) {
+        let message = 'We could not start payment. Please try again.';
+        if (response.status === 503) {
+          message = 'Payment temporarily unavailable — try again shortly.';
+        } else if (data && !data.ok && data.error) {
+          message = data.error;
+        }
+        setPaymentError(message);
+        toast.error(message);
+        setIsPlacingOrder(false);
+        return;
+      }
+
+      window.location.href = data.authorizationUrl;
+    } catch {
+      const message = 'We could not reach the payment service. Please try again.';
+      setPaymentError(message);
+      toast.error(message);
+      setIsPlacingOrder(false);
     }
   };
-
-  const prevStep = () => {
-    const currentIndex = steps.findIndex(s => s.id === currentStep);
-    if (currentIndex > 0) {
-      setCurrentStep(steps[currentIndex - 1].id);
-    }
-  };
-
-  const currentStepIndex = steps.findIndex(s => s.id === currentStep);
 
   if (!hasItems) {
     return (
@@ -341,104 +378,100 @@ export default function CheckoutPage() {
 
               {/* Payment Step */}
               {currentStep === 'payment' && (
-                <form onSubmit={paymentForm.handleSubmit(() => setCurrentStep('review'))} className="space-y-6">
+                <div className="space-y-6">
                   <h2 className="text-xl font-semibold tracking-tight">Payment Method</h2>
-                  
+
                   <div className="p-4 rounded-card border border-border bg-muted">
-                    <label className="flex min-h-11 items-center gap-3 mb-4">
-                      <input type="radio" name="payment" defaultChecked className="w-4 h-4 flex-shrink-0 accent-primary" />
-                      <span className="font-medium">Credit or Debit Card</span>
-                      <CreditCard className="ml-auto h-5 w-5 text-primary-strong" aria-hidden="true" />
-                    </label>
-                    
-                    <div className="space-y-4">
-                      <div>
-                        <Input
-                          placeholder="Card number"
-                          {...paymentForm.register('cardNumber')}
-                          maxLength={16}
-                        />
-                        {paymentForm.formState.errors.cardNumber && (
-                          <p className="text-sm text-destructive mt-1">{paymentForm.formState.errors.cardNumber.message}</p>
-                        )}
-                      </div>
-                      <div>
-                        <Input
-                          placeholder="Name on card"
-                          {...paymentForm.register('cardName')}
-                        />
-                        {paymentForm.formState.errors.cardName && (
-                          <p className="text-sm text-destructive mt-1">{paymentForm.formState.errors.cardName.message}</p>
-                        )}
-                      </div>
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                          <Input
-                            placeholder="MM / YY"
-                            {...paymentForm.register('cardExpiry')}
-                            maxLength={5}
-                          />
-                          {paymentForm.formState.errors.cardExpiry && (
-                            <p className="text-sm text-destructive mt-1">{paymentForm.formState.errors.cardExpiry.message}</p>
-                          )}
-                        </div>
-                        <div>
-                          <Input
-                            placeholder="CVC"
-                            {...paymentForm.register('cardCvc')}
-                            maxLength={4}
-                          />
-                          {paymentForm.formState.errors.cardCvc && (
-                            <p className="text-sm text-destructive mt-1">{paymentForm.formState.errors.cardCvc.message}</p>
-                          )}
-                        </div>
-                      </div>
+                    <div className="flex items-center gap-3">
+                      <Lock className="h-5 w-5 text-primary-strong" aria-hidden="true" />
+                      <span className="font-medium">Pay Securely with Paystack</span>
                     </div>
+                    <p className="text-sm text-muted-foreground mt-2">
+                      You&apos;ll be redirected to Paystack to complete payment. We never see or store your card details.
+                    </p>
                   </div>
 
-                  <div className="p-4 rounded-card border border-border">
-                    <label className="flex min-h-11 items-center gap-3">
-                      <input type="radio" name="payment" className="w-4 h-4 flex-shrink-0 accent-primary" />
-                      <span className="font-medium">PayPal</span>
-                      <Wallet className="ml-2 h-5 w-5 text-muted-foreground" aria-hidden="true" />
+                  <div>
+                    <label htmlFor="paystack-email" className="block text-sm font-medium mb-2">
+                      Email for your receipt
                     </label>
+                    <Input
+                      id="paystack-email"
+                      type="email"
+                      placeholder="Email address"
+                      value={email}
+                      onChange={(event) => setEmail(event.target.value)}
+                      autoComplete="email"
+                    />
                   </div>
 
                   <div className="flex justify-between pt-4">
                     <Button type="button" variant="outline" onClick={() => setCurrentStep('delivery')}>
                       Back
                     </Button>
-                    <Button type="submit">
+                    <Button type="button" onClick={() => setCurrentStep('review')} disabled={!selectedShipping}>
                       Review Order
                       <ChevronRight className="w-4 h-4 ml-2" />
                     </Button>
                   </div>
-                </form>
+                </div>
               )}
 
-              {/* Navigation Buttons - Only show for delivery step */}
-              {currentStep !== 'shipping' && currentStep !== 'payment' && (
-                <div className="flex justify-between pt-6 mt-6 border-t">
-                  {currentStepIndex > 0 ? (
-                    <Button variant="outline" onClick={prevStep}>
+              {/* Review Step */}
+              {currentStep === 'review' && (
+                <div className="space-y-6">
+                  <h2 className="text-xl font-semibold tracking-tight">Review &amp; Pay</h2>
+
+                  <div className="p-4 rounded-card border border-border bg-muted space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Items</span>
+                      <span className="tabular-nums">{totalItems}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Subtotal</span>
+                      <span className="tabular-nums">{formatPrice(subtotal)}</span>
+                    </div>
+                    {promo && discount > 0 && (
+                      <div className="flex justify-between text-emerald-600 dark:text-emerald-400">
+                        <span>Discount ({promo.code}, {promo.percent}%)</span>
+                        <span className="tabular-nums">-{formatPrice(discount)}</span>
+                      </div>
+                    )}
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">
+                        Shipping{selectedShipping ? ` — ${selectedShipping.name}` : ''}
+                      </span>
+                      <span className="tabular-nums">{shippingCost === 0 ? 'Free' : formatPrice(shippingCost)}</span>
+                    </div>
+                    <div className="flex justify-between border-t border-border pt-2 text-base font-semibold">
+                      <span>Total</span>
+                      <span className="tabular-nums">{formatPrice(total)}</span>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start gap-2 text-xs text-muted-foreground">
+                    <ShieldCheck className="h-4 w-4 shrink-0 text-emerald-600 dark:text-emerald-400" aria-hidden="true" />
+                    <span>Payments are processed by Paystack. Your card details are never shared with us.</span>
+                  </div>
+
+                  {paymentError && (
+                    <p role="alert" className="text-sm text-destructive">{paymentError}</p>
+                  )}
+
+                  <div className="flex justify-between pt-4">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setCurrentStep('payment')}
+                      disabled={isPlacingOrder}
+                    >
                       Back
                     </Button>
-                  ) : (
-                    <Button asChild variant="outline">
-                      <Link href="/cart">Back</Link>
+                    <Button type="button" onClick={handlePlaceOrder} disabled={isPlacingOrder}>
+                      {isPlacingOrder ? 'Redirecting…' : `Pay ${formatPrice(total)}`}
+                      {!isPlacingOrder && <Lock className="w-4 h-4 ml-2" aria-hidden="true" />}
                     </Button>
-                  )}
-                  
-                  {currentStepIndex < steps.length - 1 ? (
-                    <Button onClick={nextStep}>
-                      Continue
-                      <ChevronRight className="w-4 h-4 ml-2" />
-                    </Button>
-                  ) : (
-                    <Button>
-                      Place Order
-                    </Button>
-                  )}
+                  </div>
                 </div>
               )}
             </div>
@@ -462,7 +495,7 @@ export default function CheckoutPage() {
                       <p className="text-sm font-medium line-clamp-1">{item.name}</p>
                       <p className="text-xs text-muted-foreground">{item.brand}</p>
                     </div>
-                    <p className="text-sm font-semibold tabular-nums">{formatPrice(item.price, item.currency ?? 'USD')}</p>
+                    <p className="text-sm font-semibold tabular-nums">{formatPrice(item.price, item.currency ?? 'NGN')}</p>
                   </div>
                 ))}
               </div>
@@ -472,14 +505,23 @@ export default function CheckoutPage() {
                   <span className="text-muted-foreground">Subtotal</span>
                   <span className="tabular-nums">{formatPrice(subtotal)}</span>
                 </div>
+                {promo && discount > 0 && (
+                  <div className="flex justify-between text-sm text-emerald-600 dark:text-emerald-400">
+                    <span>Discount ({promo.code}, {promo.percent}%)</span>
+                    <span className="tabular-nums">-{formatPrice(discount)}</span>
+                  </div>
+                )}
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Shipping</span>
-                  <span className="tabular-nums">{selectedShipping ? formatPrice(selectedShipping.price) : '--'}</span>
+                  <span className="tabular-nums">
+                    {selectedShipping ? (shippingCost === 0 ? 'Free' : formatPrice(shippingCost)) : '--'}
+                  </span>
                 </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Tax (8%)</span>
-                  <span className="tabular-nums">{formatPrice(tax)}</span>
-                </div>
+                {freeShipping && (
+                  <p className="text-sm text-emerald-600 dark:text-emerald-400">
+                    Free shipping applied on orders over {formatPrice(FREE_SHIPPING_THRESHOLD)}
+                  </p>
+                )}
                 <div className="flex justify-between text-lg font-semibold border-t border-border pt-3">
                   <span>Total</span>
                   <span className="tabular-nums">{formatPrice(total)}</span>
