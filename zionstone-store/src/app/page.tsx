@@ -333,134 +333,141 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Instagram */}
+      {/* Social — Instagram and WhatsApp share one muted band. They already
+          speak the same banner/grid/link grammar, so both blocks sit intact
+          inside a single parent section rather than two stacked full-height
+          ones. The container is a flex column so the two blocks are spaced by
+          `gap` instead of a hand-tuned margin. The Phone section below flips to
+          the plain surface so the page keeps its muted/plain alternation. */}
       <section className="bg-muted py-12 md:py-20">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <FadeIn>
-            <div className="mx-auto flex max-w-2xl flex-col items-center text-center">
+        <div className="container mx-auto flex flex-col gap-16 px-4 sm:px-6 md:gap-24 lg:px-8">
+          {/* Instagram */}
+          <div>
+            <FadeIn>
+              <div className="mx-auto flex max-w-2xl flex-col items-center text-center">
+                <a
+                  href={INSTAGRAM_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 rounded-pill bg-gradient-to-tr from-[#feda75] via-[#d62976] to-[#4f5bd5] p-[2px] focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                >
+                  <span className="inline-flex items-center gap-2 rounded-pill bg-background px-4 py-2">
+                    <Instagram className="h-5 w-5" aria-hidden="true" />
+                    <span className="font-medium">@{INSTAGRAM_HANDLE}</span>
+                  </span>
+                </a>
+                <h2 className="mt-6 text-3xl font-semibold tracking-tight md:text-4xl">
+                  Follow @{INSTAGRAM_HANDLE}
+                </h2>
+                <p className="mt-3 text-muted-foreground">
+                  New arrivals, installs, and studio inspiration from around the store.
+                </p>
+              </div>
+            </FadeIn>
+            <FadeIn delay={0.1}>
               <a
                 href={INSTAGRAM_URL}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 rounded-pill bg-gradient-to-tr from-[#feda75] via-[#d62976] to-[#4f5bd5] p-[2px] focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                aria-label={`Follow @${INSTAGRAM_HANDLE} on Instagram`}
+                className="relative mx-auto mt-10 inline-grid grid-cols-3 gap-2 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
               >
-                <span className="inline-flex items-center gap-2 rounded-pill bg-background px-4 py-2">
-                  <Instagram className="h-5 w-5" aria-hidden="true" />
-                  <span className="font-medium">@{INSTAGRAM_HANDLE}</span>
+                {instagramTiles.map((tile, index) => (
+                  <span
+                    key={index}
+                    aria-hidden="true"
+                    className={`h-16 w-16 rounded-lg bg-gradient-to-br sm:h-20 sm:w-20 ${tile}`}
+                  />
+                ))}
+                <span className="pointer-events-none absolute inset-0 flex items-center justify-center">
+                  <span className="flex h-14 w-14 items-center justify-center rounded-pill bg-gradient-to-tr from-[#feda75] via-[#d62976] to-[#4f5bd5] text-white shadow-card">
+                    <Instagram className="h-7 w-7" aria-hidden="true" />
+                  </span>
                 </span>
               </a>
-              <h2 className="mt-6 text-3xl font-semibold tracking-tight md:text-4xl">
-                Follow @{INSTAGRAM_HANDLE}
-              </h2>
-              <p className="mt-3 text-muted-foreground">
-                New arrivals, installs, and studio inspiration from around the store.
+            </FadeIn>
+            <FadeIn delay={0.15}>
+              <p className="mt-8 text-center">
+                <a
+                  href={INSTAGRAM_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 font-medium text-primary-strong underline-offset-4 transition-colors duration-200 ease-out hover:text-primary-strong/80 hover:underline focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                >
+                  <MessageCircle className="h-4 w-4" aria-hidden="true" />
+                  Follow us on Instagram
+                </a>
               </p>
-            </div>
-          </FadeIn>
-          <FadeIn delay={0.1}>
-            <a
-              href={INSTAGRAM_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label={`Follow @${INSTAGRAM_HANDLE} on Instagram`}
-              className="relative mx-auto mt-10 inline-grid grid-cols-3 gap-2 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
-            >
-              {instagramTiles.map((tile, index) => (
-                <span
-                  key={index}
-                  aria-hidden="true"
-                  className={`h-16 w-16 rounded-lg bg-gradient-to-br sm:h-20 sm:w-20 ${tile}`}
-                />
-              ))}
-              <span className="pointer-events-none absolute inset-0 flex items-center justify-center">
-                <span className="flex h-14 w-14 items-center justify-center rounded-pill bg-gradient-to-tr from-[#feda75] via-[#d62976] to-[#4f5bd5] text-white shadow-card">
-                  <Instagram className="h-7 w-7" aria-hidden="true" />
-                </span>
-              </span>
-            </a>
-          </FadeIn>
-          <FadeIn delay={0.15}>
-            <p className="mt-8 text-center">
+            </FadeIn>
+          </div>
+
+          {/* WhatsApp — the same banner/grid/link grammar as Instagram, in the
+              WhatsApp brand green. Contact channels are facts, not claims, so
+              the copy reads numbers and intents rather than promises. */}
+          <div>
+            <FadeIn>
+              <div className="mx-auto flex max-w-2xl flex-col items-center text-center">
+                <a
+                  href={WHATSAPP_HREF}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 rounded-pill bg-gradient-to-tr from-[#25D366] via-[#128C7E] to-[#075E54] p-[2px] focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                >
+                  <span className="inline-flex items-center gap-2 rounded-pill bg-background px-4 py-2">
+                    <MessageCircle className="h-5 w-5" aria-hidden="true" />
+                    <span className="font-medium">{OWNER_PHONES[0].label}</span>
+                  </span>
+                </a>
+                <h2 className="mt-6 text-3xl font-semibold tracking-tight md:text-4xl">
+                  Chat With Us on WhatsApp
+                </h2>
+                <p className="mt-3 text-muted-foreground">
+                  Price checks, stock questions, or orders — send a message and we&apos;ll take it from there.
+                </p>
+              </div>
+            </FadeIn>
+            <FadeIn delay={0.1}>
               <a
-                href={INSTAGRAM_URL}
+                href={WHATSAPP_HREF}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 font-medium text-primary-strong underline-offset-4 transition-colors duration-200 ease-out hover:text-primary-strong/80 hover:underline focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                aria-label={`Message ${OWNER_PHONES[0].label} on WhatsApp`}
+                className="relative mx-auto mt-10 inline-grid grid-cols-3 gap-2 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
               >
-                <MessageCircle className="h-4 w-4" aria-hidden="true" />
-                Follow us on Instagram
+                {whatsappTiles.map((tile, index) => (
+                  <span
+                    key={index}
+                    aria-hidden="true"
+                    className={`h-16 w-16 rounded-lg bg-gradient-to-br sm:h-20 sm:w-20 ${tile}`}
+                  />
+                ))}
+                <span className="pointer-events-none absolute inset-0 flex items-center justify-center">
+                  <span className="flex h-14 w-14 items-center justify-center rounded-pill bg-gradient-to-tr from-[#25D366] via-[#128C7E] to-[#075E54] text-white shadow-card">
+                    <MessageCircle className="h-7 w-7" aria-hidden="true" />
+                  </span>
+                </span>
               </a>
-            </p>
-          </FadeIn>
+            </FadeIn>
+            <FadeIn delay={0.15}>
+              <p className="mt-8 text-center">
+                <a
+                  href={WHATSAPP_HREF}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 font-medium text-primary-strong underline-offset-4 transition-colors duration-200 ease-out hover:text-primary-strong/80 hover:underline focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                >
+                  <MessageCircle className="h-4 w-4" aria-hidden="true" />
+                  Message us on WhatsApp
+                </a>
+              </p>
+            </FadeIn>
+          </div>
         </div>
       </section>
 
-      {/* WhatsApp — the same banner/grid/link grammar as Instagram, in the
-          WhatsApp brand green. Contact channels are facts, not claims, so the
-          copy reads numbers and intents rather than promises. */}
+      {/* Phone — on the plain surface, because the merged Social band above
+          now owns the muted slot that used to alternate around it. */}
       <section className="py-12 md:py-20">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <FadeIn>
-            <div className="mx-auto flex max-w-2xl flex-col items-center text-center">
-              <a
-                href={WHATSAPP_HREF}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 rounded-pill bg-gradient-to-tr from-[#25D366] via-[#128C7E] to-[#075E54] p-[2px] focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
-              >
-                <span className="inline-flex items-center gap-2 rounded-pill bg-background px-4 py-2">
-                  <MessageCircle className="h-5 w-5" aria-hidden="true" />
-                  <span className="font-medium">{OWNER_PHONES[0].label}</span>
-                </span>
-              </a>
-              <h2 className="mt-6 text-3xl font-semibold tracking-tight md:text-4xl">
-                Chat With Us on WhatsApp
-              </h2>
-              <p className="mt-3 text-muted-foreground">
-                Price checks, stock questions, or orders — send a message and we&apos;ll take it from there.
-              </p>
-            </div>
-          </FadeIn>
-          <FadeIn delay={0.1}>
-            <a
-              href={WHATSAPP_HREF}
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label={`Message ${OWNER_PHONES[0].label} on WhatsApp`}
-              className="relative mx-auto mt-10 inline-grid grid-cols-3 gap-2 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
-            >
-              {whatsappTiles.map((tile, index) => (
-                <span
-                  key={index}
-                  aria-hidden="true"
-                  className={`h-16 w-16 rounded-lg bg-gradient-to-br sm:h-20 sm:w-20 ${tile}`}
-                />
-              ))}
-              <span className="pointer-events-none absolute inset-0 flex items-center justify-center">
-                <span className="flex h-14 w-14 items-center justify-center rounded-pill bg-gradient-to-tr from-[#25D366] via-[#128C7E] to-[#075E54] text-white shadow-card">
-                  <MessageCircle className="h-7 w-7" aria-hidden="true" />
-                </span>
-              </span>
-            </a>
-          </FadeIn>
-          <FadeIn delay={0.15}>
-            <p className="mt-8 text-center">
-              <a
-                href={WHATSAPP_HREF}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 font-medium text-primary-strong underline-offset-4 transition-colors duration-200 ease-out hover:text-primary-strong/80 hover:underline focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
-              >
-                <MessageCircle className="h-4 w-4" aria-hidden="true" />
-                Message us on WhatsApp
-              </a>
-            </p>
-          </FadeIn>
-        </div>
-      </section>
-
-      {/* Phone */}
-      <section className="bg-muted py-12 md:py-20">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <FadeIn>
             <div className="mx-auto flex max-w-2xl flex-col items-center text-center">
