@@ -74,10 +74,44 @@ export function HeroCarousel() {
 
   return (
     <section className="relative bg-secondary text-secondary-foreground overflow-hidden">
-      <div className="container mx-auto px-4 py-12 md:py-20">
+      {/* Full-bleed photographic backdrop. Decorative, so it is invisible to
+          assistive tech (empty alt + aria-hidden) and needs no description. It
+          is eager with `priority` because it is now the largest above-the-fold
+          paint on every viewport — the LCP element. `fill` needs the positioned
+          parent, which the section provides. */}
+      <Image
+        src="/images/hero-golden-hour.webp"
+        alt=""
+        aria-hidden
+        fill
+        priority
+        sizes="100vw"
+        className="object-cover object-center"
+      />
+      {/* Scrim layers over the backdrop. Two explicit layers, not one
+          responsive colour: the copy spans the full width on mobile but is
+          confined to the left column on md+, and a single utility cannot serve
+          both without the background-image/background-colour cascade ambiguity.
+
+          Mobile (full-width copy, and `object-cover` centre-crops the wide
+          scene so the badge can sit over the brightest amber highlights —
+          measured up to ~RGB 252/219/162, rel-luminance ~188). The 14px gold
+          badge needs 4.5:1; `/90` only reaches 3.67:1 over that patch and even
+          `/95` misses at 4.21:1, so this is the lowest step that clears AA
+          across the whole image including its near-white speculars (4.53:1). */}
+      <div aria-hidden className="absolute inset-0 bg-secondary/[0.98] md:hidden" />
+      {/* md+: the badge and copy sit in the left column, so a left-anchored
+          gradient keeps that column on solid `from-secondary` (the badge lands
+          on the dark left of the scene at 4.8:1) and fades right to `/35`, where
+          only the HERO-1 card sits and the large H1/subtitle clear 3:1. */}
+      <div aria-hidden className="absolute inset-0 hidden md:block bg-gradient-to-r from-secondary via-secondary/80 to-secondary/35" />
+
+      <div className="relative container mx-auto px-4 py-12 md:py-20">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
-          {/* Text column. The photograph never overlaps it, so the copy sits on
-              the flat `bg-secondary` surface at full strength — no scrim needed. */}
+          {/* Text column. It now layers above the full-bleed backdrop and its
+              scrim (the absolute layers above), so the copy is no longer on a
+              flat `bg-secondary` canvas — readability comes from the scrim, not
+              from an empty surface. `relative z-10` keeps it over those layers. */}
           <div className="relative z-10">
             {slides.map((slide, index) => {
               const isActive = index === current;
@@ -124,11 +158,13 @@ export function HeroCarousel() {
             })}
           </div>
 
-          {/* Product column. The photograph renders at full opacity — it is the
-              content, and nothing is layered over it. Separation from the
-              `bg-secondary` canvas comes from the card frame below, which is
-              layout, not a tint: /images/1.jpg is an opaque white-background
-              JPEG and would otherwise float as a raw white slab. */}
+          {/* Product column. The HERO-1 photograph still renders at full
+              opacity inside its own `bg-card`/`border-border` frame, layered
+              above the full-bleed backdrop and scrim. It is the content, and
+              nothing is drawn over it. Separation from the backdrop comes from
+              the card frame, which is layout, not a tint: /images/1.jpg is an
+              opaque white-background JPEG and would otherwise float as a raw
+              white slab. */}
           <div className="hidden lg:block relative z-10">
             {slides.map((slide, index) => {
               const isActive = index === current;
@@ -149,11 +185,11 @@ export function HeroCarousel() {
                       width={slide.imageWidth}
                       height={slide.imageHeight}
                       sizes="(min-width: 1024px) 448px, 100vw"
-                      // Only the first slide is the LCP element: it is the one
-                      // painted on initial load, so it is the only image worth
-                      // an eager fetch/preload hint. The later slides stay
-                      // lazy, saving an early request for art the user may
-                      // never look at.
+                      // The first slide is the one painted on initial load, so
+                      // it keeps an eager fetch/preload hint; the later slides
+                      // stay lazy, saving an early request for art the user may
+                      // never look at. The full-bleed backdrop above is the LCP
+                      // element now and carries its own `priority`.
                       priority={index === 0}
                       className="w-auto max-w-full h-auto max-h-[360px] object-contain"
                     />

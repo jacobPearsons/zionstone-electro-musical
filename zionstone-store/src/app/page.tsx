@@ -95,15 +95,15 @@ export default function HomePage() {
 
 
       {/* Featured Products */}
-      <section className="py-16 md:py-24">
-        <div className="container mx-auto px-4">
+      <section className="py-12 md:py-20">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <FadeIn>
             <div className="flex items-center justify-between mb-12">
               <div>
                 <h2 className="text-3xl font-semibold tracking-tight md:text-4xl">Featured Gear</h2>
                 <p className="text-muted-foreground mt-2">Hand-picked instruments and studio hardware</p>
               </div>
-              <Link href="/products" className="font-medium text-primary-strong underline-offset-4 transition-colors duration-200 ease-out hover:text-primary-strong/80 hover:underline">
+              <Link href="/products" className="font-medium text-primary-strong underline-offset-4 transition-colors duration-200 ease-out hover:text-primary-strong/80 hover:underline focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background">
                 View All →
               </Link>
             </div>
@@ -180,8 +180,8 @@ export default function HomePage() {
       </section>
 
       {/* Categories */}
-      <section className="bg-muted py-16 md:py-24">
-        <div className="container mx-auto px-4">
+      <section className="bg-muted py-12 md:py-20">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <FadeIn>
             <h2 className="mb-4 text-center text-3xl font-semibold tracking-tight md:text-4xl">Shop by Category</h2>
           </FadeIn>
@@ -225,8 +225,8 @@ export default function HomePage() {
       <ValueProps />
 
       {/* Today's Deals */}
-      <section className="bg-muted py-16 md:py-24">
-        <div className="container mx-auto px-4">
+      <section className="bg-muted py-12 md:py-20">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <FadeIn>
             <div className="mb-8 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div>
@@ -239,7 +239,7 @@ export default function HomePage() {
                     : "Every price in the catalogue, no inflated was-prices"}
                 </p>
               </div>
-              <Link href="/products?sale=true" className="self-start font-medium text-primary-strong underline-offset-4 transition-colors duration-200 ease-out hover:text-primary-strong/80 hover:underline sm:self-auto">
+              <Link href="/products?sale=true" className="self-start font-medium text-primary-strong underline-offset-4 transition-colors duration-200 ease-out hover:text-primary-strong/80 hover:underline focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background sm:self-auto">
                 See All Deals →
               </Link>
             </div>
@@ -287,8 +287,8 @@ export default function HomePage() {
       </section>
 
       {/* Testimonials */}
-      <section className="py-16 md:py-24">
-        <div className="container mx-auto px-4">
+      <section className="py-12 md:py-20">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <FadeIn>
             <div className="mx-auto max-w-3xl text-center">
               <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
@@ -324,7 +324,7 @@ export default function HomePage() {
                 )}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="font-medium text-primary-strong underline-offset-4 transition-colors duration-200 ease-out hover:text-primary-strong/80 hover:underline"
+                className="font-medium text-primary-strong underline-offset-4 transition-colors duration-200 ease-out hover:text-primary-strong/80 hover:underline focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
               >
                 Tell us
               </a>
@@ -334,8 +334,8 @@ export default function HomePage() {
       </section>
 
       {/* Instagram */}
-      <section className="bg-muted py-16 md:py-24">
-        <div className="container mx-auto px-4">
+      <section className="bg-muted py-12 md:py-20">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <FadeIn>
             <div className="mx-auto flex max-w-2xl flex-col items-center text-center">
               <a
@@ -363,7 +363,7 @@ export default function HomePage() {
               target="_blank"
               rel="noopener noreferrer"
               aria-label={`Follow @${INSTAGRAM_HANDLE} on Instagram`}
-              className="relative mx-auto mt-10 inline-grid grid-cols-3 gap-2 focus-visible:outline-none"
+              className="relative mx-auto mt-10 inline-grid grid-cols-3 gap-2 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
             >
               {instagramTiles.map((tile, index) => (
                 <span
@@ -385,7 +385,7 @@ export default function HomePage() {
                 href={INSTAGRAM_URL}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 font-medium text-primary-strong underline-offset-4 transition-colors duration-200 ease-out hover:text-primary-strong/80 hover:underline"
+                className="inline-flex items-center gap-2 font-medium text-primary-strong underline-offset-4 transition-colors duration-200 ease-out hover:text-primary-strong/80 hover:underline focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
               >
                 <MessageCircle className="h-4 w-4" aria-hidden="true" />
                 Follow us on Instagram
@@ -398,8 +398,8 @@ export default function HomePage() {
       {/* WhatsApp — the same banner/grid/link grammar as Instagram, in the
           WhatsApp brand green. Contact channels are facts, not claims, so the
           copy reads numbers and intents rather than promises. */}
-      <section className="py-16 md:py-24">
-        <div className="container mx-auto px-4">
+      <section className="py-12 md:py-20">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <FadeIn>
             <div className="mx-auto flex max-w-2xl flex-col items-center text-center">
               <a
@@ -427,7 +427,7 @@ export default function HomePage() {
               target="_blank"
               rel="noopener noreferrer"
               aria-label={`Message ${OWNER_PHONES[0].label} on WhatsApp`}
-              className="relative mx-auto mt-10 inline-grid grid-cols-3 gap-2 focus-visible:outline-none"
+              className="relative mx-auto mt-10 inline-grid grid-cols-3 gap-2 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
             >
               {whatsappTiles.map((tile, index) => (
                 <span
@@ -449,7 +449,7 @@ export default function HomePage() {
                 href={WHATSAPP_HREF}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 font-medium text-primary-strong underline-offset-4 transition-colors duration-200 ease-out hover:text-primary-strong/80 hover:underline"
+                className="inline-flex items-center gap-2 font-medium text-primary-strong underline-offset-4 transition-colors duration-200 ease-out hover:text-primary-strong/80 hover:underline focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
               >
                 <MessageCircle className="h-4 w-4" aria-hidden="true" />
                 Message us on WhatsApp
@@ -460,8 +460,8 @@ export default function HomePage() {
       </section>
 
       {/* Phone */}
-      <section className="bg-muted py-16 md:py-24">
-        <div className="container mx-auto px-4">
+      <section className="bg-muted py-12 md:py-20">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <FadeIn>
             <div className="mx-auto flex max-w-2xl flex-col items-center text-center">
               <span className="inline-flex items-center gap-2 rounded-pill bg-gradient-to-tr from-slate-600 via-slate-800 to-slate-950 p-[2px]">
@@ -494,7 +494,7 @@ export default function HomePage() {
             <p className="mt-8 text-center">
               <a
                 href={`tel:${OWNER_PHONES[0].tel}`}
-                className="inline-flex items-center gap-2 font-medium text-primary-strong underline-offset-4 transition-colors duration-200 ease-out hover:text-primary-strong/80 hover:underline"
+                className="inline-flex items-center gap-2 font-medium text-primary-strong underline-offset-4 transition-colors duration-200 ease-out hover:text-primary-strong/80 hover:underline focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
               >
                 <Phone className="h-4 w-4" aria-hidden="true" />
                 Call {OWNER_PHONES[0].label}
