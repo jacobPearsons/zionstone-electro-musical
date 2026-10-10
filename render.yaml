@@ -19,10 +19,9 @@ services:
     # Only the upload disk needs one; the database is Neon, off-platform.
     plan: starter
     rootDir: zionstone-api
-    # --production=false: Render sets NODE_ENV=production during the build, and
-    # bun then skips devDependencies by default. The build needs `typescript`
-    # (tsc) and the boot command needs the `prisma` CLI, so force full install.
-    buildCommand: bun install --frozen-lockfile --production=false && bunx prisma generate && bun run build
+    # Plain install is enough — bun installs devDependencies (typescript, prisma)
+    # even when Render sets NODE_ENV=production for the build.
+    buildCommand: bun install --frozen-lockfile && bunx prisma generate && bun run build
     # Run pending migrations over the direct URL, then start the compiled server.
     startCommand: DATABASE_URL="${DIRECT_URL:-$DATABASE_URL}" bunx prisma migrate deploy && bun run start
     # Liveness only — never touches the database, so a Neon blip can't fail deploys.
