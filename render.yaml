@@ -1,0 +1,56 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Render Blueprint for the Zionstone API.
+#
+# Why a native runtime and not Docker: Render's native runtime already ships
+# Bun, Node and postgresql-client, so nothing here needs a custom image. Native
+# also gives us persistent disks, HTTP health checks and zero-downtime deploys
+# with zero extra configuration — a Dockerfile would only add maintenance.
+#
+# Database: this service connects to an EXTERNAL Neon Postgres (no `databases:`
+# block below). See zionstone-api/README.md for how to fill in the connection
+# strings. Migrations run over the direct (non-pooled) URL at boot.
+# ─────────────────────────────────────────────────────────────────────────────
+
+services:
+  - type: web
+    name: zionstone-api
+    runtime: node
+    # A persistent disk requires a paid plan (free instances have no disk).
+    # Only the upload disk needs one; the database is Neon, off-platform.
+    plan: starter
+    rootDir: zionstone-api
+    buildCommand: bun install --frozen-lockfile && bunx prisma generate && bun run build
+    # Run pending migrations over the direct URL, then start the compiled server.
+    startCommand: DATABASE_URL="${DIRECT_URL:-$DATABASE_URL}" bunx prisma migrate deploy && bun run start
+    # Liveness only — never touches the database, so a Neon blip can't fail deploys.
+    healthCheckPath: /api/health
+    disk:
+      name: zionstone-uploads
+      mountPath: /var/data
+      sizeGB: 1
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: LOG_LEVEL
+        value: info
+      # Uploaded product photos live on the mounted disk, not the ephemeral
+      # container filesystem (which is wiped on every deploy).
+      - key: UPLOAD_DIR
+        value: /var/data/uploads
+      # Datastore + app config are provided per-environment, never committed.
+      - key: DATABASE_URL
+        sync: false
+      - key: DIRECT_URL
+        sync: false
+      - key: DATABASE_URL_POOLED
+        sync: false
+      - key: PUBLIC_API_URL
+        sync: false
+      - key: PUBLIC_SITE_URL
+        sync: false
+      - key: CLIENT_ORIGIN
+        sync: false
+      - key: CLERK_SECRET_KEY
+        sync: false
+      - key: PAYSTACK_SECRET_KEY
+        sync: false

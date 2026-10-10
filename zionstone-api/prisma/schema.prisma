@@ -1,0 +1,66 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// The public product-upload queue. Metadata lives here; the uploaded photo
+// stays on the server at the stored path. Approving an item does NOT publish
+// it to the storefront — publishing is a manual catalogue rebuild.
+model ProductSubmission {
+  id          String               @id @default(cuid())
+  slug        String
+  name        String
+  brand       String?
+  category    String
+  tags        String[]
+  description String
+  price       Int?
+  currency    String               @default("NGN")
+  contact     String?
+  imagePath   String
+  status      SubmissionStatus @default(PENDING)
+  submittedAt DateTime             @default(now())
+  updatedAt   DateTime             @updatedAt
+
+  @@index([status])
+  @@index([slug])
+}
+
+enum SubmissionStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+// Paystack checkout order. Pricing is recomputed server-side at checkout time
+// (see computeOrderTotals) so the row reflects what was actually charged.
+model Order {
+  id        String            @id @default(cuid())
+  reference String            @unique
+  email     String
+  items     Json
+  shipping  Json
+  promo     Json?
+  totals    Json
+  status    PaystackOrderStatus @default(PENDING)
+  amountNgn Int?
+  currency  String?
+  paidAt    DateTime?
+  channel   String?
+  createdAt DateTime          @default(now())
+  updatedAt DateTime          @updatedAt
+
+  @@index([status])
+  @@index([createdAt])
+}
+
+enum PaystackOrderStatus {
+  PENDING
+  PAID
+  FAILED
+  ABANDONED
+}
