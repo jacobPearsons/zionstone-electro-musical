@@ -34,6 +34,9 @@
   # *.onrender.com hostname exactly; NEXT_PUBLIC_* is inlined into the client
   # bundle at build time, so a change requires a Netlify rebuild.
   NEXT_PUBLIC_API_URL = "https://zionstone-store.onrender.com"
-  # Canonical origin for metadata/OG links. Override in the UI if a custom
-  # domain (e.g. https://www.zionstone.com) is the primary one.
-  NEXT_PUBLIC_SITE_URL = "https://zionstone.netlify.app"
+  # Canonical origin for metadata/OG links. The storefront lives only at
+  # https://zionstone-store.netlify.app (the Netlify site URL).
+  # NOTE: zionstone.com / www.zionstone.com belong to an unrelated business and
+  # must NOT be used as origins for this site. If a custom storefront domain is
+  # added later, override this via a UI environment variable.
+  NEXT_PUBLIC_SITE_URL = "https://zionstone-store.netlify.app"

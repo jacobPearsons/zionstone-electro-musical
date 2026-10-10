@@ -105,10 +105,11 @@ absolute.
 ### Connecting the Netlify storefront
 
 Set the storefront's server-side API base to this service's URL, and set this
-service's `CLIENT_ORIGIN` to the storefront's origin(s), e.g.
-`https://zionstone.netlify.app,https://www.zionstone.com`. In production, any
-browser origin not on that list is denied — a missing `CLIENT_ORIGIN` fails
-closed rather than allowing every origin.
+service's `CLIENT_ORIGIN` to the storefront's origin, i.e.
+`https://zionstone-store.netlify.app`. In production, any browser origin not on
+that list is denied — a missing `CLIENT_ORIGIN` fails closed rather than
+allowing every origin. Do not add `zionstone.com` / `www.zionstone.com`: that
+domain belongs to an unrelated business.
 
 ## Why no Dockerfile
 
