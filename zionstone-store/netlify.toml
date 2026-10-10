@@ -16,6 +16,11 @@
 
 [build]
   command = "bun run build"
+  # Next.js is server-rendered (App Router with dynamic routes), so the
+  # deployable output is `.next`, consumed by Netlify's Next.js Runtime. The UI
+  # had this pointed at the repo root, which deployed an empty folder and made
+  # every URL return Netlify's generic "Page not found".
+  publish = ".next"
 
 [build.environment]
   NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY = "pk_test_c2V0LXRpY2stNTk3Ny5jbGVyay5hY2NvdW50cy5kZXYk"
