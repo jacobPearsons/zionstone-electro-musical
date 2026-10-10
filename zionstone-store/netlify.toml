@@ -22,6 +22,12 @@
   # every URL return Netlify's generic "Page not found".
   publish = ".next"
 
+# Pin the Next.js Runtime explicitly. Without it Netlify can fall back to
+# serving `.next` as static files, which yields Netlify's plain 404 on every
+# route instead of the app.
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
+
 [build.environment]
   NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY = "pk_test_c2V0LXRpY2stNTk3Ny5jbGVyay5hY2NvdW50cy5kZXYk"
   # Express API service (see ../render.yaml). Without this the client falls
