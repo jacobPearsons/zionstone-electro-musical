@@ -8,9 +8,9 @@ const isProtectedRoute = createRouteMatcher([
   "/wishlist(.*)",
 ]);
 
-export default clerkMiddleware((auth, req) => {
+export default clerkMiddleware(async (auth, req) => {
   if (isProtectedRoute(req)) {
-    auth().protect();
+    await auth.protect();
   }
 });
 

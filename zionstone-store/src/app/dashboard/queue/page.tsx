@@ -25,7 +25,8 @@ export default async function DashboardQueuePage() {
   let error: string | null = null;
 
   try {
-    token = await auth().getToken();
+    const { getToken } = await auth();
+    token = await getToken();
     items = (await listQueue('pending', token)).items;
   } catch (caught) {
     error = describeQueueError(caught);

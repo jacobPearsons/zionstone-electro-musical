@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Instagram, MessageCircle, Quote } from "lucide-react";
+import { Instagram, MessageCircle, Phone, Quote } from "lucide-react";
 import { ShippingBadge } from "@/components/shipping";
 import { AddToCartButton, ProductImage, ContactOwnerButton } from "@/components/product";
 import { HeroCarousel } from "@/components/HeroCarousel";
@@ -12,6 +12,10 @@ import { OWNER_PHONES, ownerWhatsAppHref } from "@/lib/contact";
 
 const INSTAGRAM_HANDLE = "Zionstoneelectro_musicals";
 const INSTAGRAM_URL = `https://instagram.com/${INSTAGRAM_HANDLE}`;
+const WHATSAPP_HREF = ownerWhatsAppHref(
+  OWNER_PHONES[0],
+  "Hello Zionstone, I'd like to make an enquiry."
+);
 
 const testimonials = [
   {
@@ -44,6 +48,18 @@ const instagramTiles = [
   "from-primary/15 to-primary/5",
   "from-secondary to-muted",
   "from-primary/20 to-secondary",
+];
+
+const whatsappTiles = [
+  "from-[#25D366]/30 to-[#128C7E]/10",
+  "from-muted to-[#25D366]/15",
+  "from-[#128C7E]/20 to-secondary",
+  "from-secondary to-[#25D366]/25",
+  "from-[#25D366]/40 to-muted",
+  "from-muted to-secondary",
+  "from-[#128C7E]/25 to-[#25D366]/10",
+  "from-secondary to-muted",
+  "from-[#25D366]/20 to-secondary",
 ];
 
 const featuredSlugs = [
@@ -100,7 +116,11 @@ export default function HomePage() {
                 >
                   <Link href={`/products/${product.slug}`}>
                     <div className="relative flex aspect-square items-center justify-center bg-muted">
-                      <ProductImage image={product.images?.[0] ?? product.emoji ?? ''} name={product.name} />
+                      <ProductImage
+                        image={product.images?.[0] ?? product.emoji ?? ''}
+                        name={product.name}
+                        sizes="(min-width: 1024px) 25vw, (min-width: 640px) 50vw, 100vw"
+                      />
                       <div className="absolute top-3 left-3">
                         <ShippingBadge
                           shipsInDays={product.shipsInDays}
@@ -208,7 +228,7 @@ export default function HomePage() {
       <section className="bg-muted py-16 md:py-24">
         <div className="container mx-auto px-4">
           <FadeIn>
-            <div className="flex items-center justify-between mb-8">
+            <div className="mb-8 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <h2 className="text-3xl font-semibold tracking-tight md:text-4xl">
                   Today&apos;s Deals
@@ -219,38 +239,50 @@ export default function HomePage() {
                     : "Every price in the catalogue, no inflated was-prices"}
                 </p>
               </div>
-              <Link href="/products?sale=true" className="font-medium text-primary-strong underline-offset-4 transition-colors duration-200 ease-out hover:text-primary-strong/80 hover:underline">
+              <Link href="/products?sale=true" className="self-start font-medium text-primary-strong underline-offset-4 transition-colors duration-200 ease-out hover:text-primary-strong/80 hover:underline sm:self-auto">
                 See All Deals →
               </Link>
             </div>
           </FadeIn>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {/* On a small screen three full-width stacked cards bury the section
+              below the fold, so the deals become a swipeable snap rail instead;
+              md+ keeps the prose-style 3-up grid. `scrollbar-hide` keeps the
+              rail from painting a chunky scrollbar over the muted canvas. */}
+          <div className="-mx-4 flex snap-x snap-mandatory gap-4 overflow-x-auto px-4 pb-2 scrollbar-hide md:mx-0 md:grid md:grid-cols-3 md:gap-6 md:overflow-visible md:px-0 md:pb-0">
             {deals.map((deal, index) => (
-              <FadeIn key={deal.id} delay={index * 0.15}>
-                <div
-                  className="group rounded-card border border-border bg-card p-6 shadow-card transition-shadow duration-200 ease-out hover:shadow-card-hover"
+              <FadeIn key={deal.id} delay={index * 0.15} className="shrink-0 basis-[72%] snap-start sm:basis-[45%] md:basis-auto">
+                <Link
+                  href={`/products/${deal.slug}`}
+                  className="group block h-full rounded-card border border-border bg-card p-4 shadow-card transition-shadow duration-200 ease-out hover:shadow-card-hover focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
                 >
-                  <div className="flex items-start gap-4">
-                    <div className="flex h-20 w-20 items-center justify-center rounded-card bg-muted text-4xl">
-                      {deal.emoji}
-                    </div>
-                    <div className="flex-1">
-                      <div className="mb-2 inline-block rounded-full bg-destructive px-2 py-1 text-xs font-semibold text-destructive-foreground">
-                        {discountPercent(deal)}% OFF
-                      </div>
-                      <h3 className="font-semibold tracking-tight transition-colors duration-200 ease-out group-hover:text-primary-strong">{deal.name}</h3>
-                      <div className="flex items-baseline gap-2 mt-1">
-                        <span className="text-xl font-semibold tabular-nums text-primary">{formatPrice(deal.price)}</span>
-                        {isOnSale(deal) && (
-                          <span className="text-sm tabular-nums text-muted-foreground line-through">{formatPrice(deal.originalPrice as number)}</span>
-                        )}
-                      </div>
+                  <div className="relative flex aspect-square items-center justify-center overflow-hidden rounded-card bg-muted">
+                    <ProductImage
+                      image={deal.images?.[0] ?? deal.emoji ?? ''}
+                      name={deal.name}
+                      sizes="(min-width: 768px) 33vw, 50vw"
+                    />
+                    <div className="absolute top-3 right-3 rounded-full bg-destructive px-2 py-1 text-xs font-semibold text-destructive-foreground">
+                      {discountPercent(deal)}% OFF
                     </div>
                   </div>
-                </div>
+                  <div className="mt-3">
+                    <h3 className="line-clamp-2 font-semibold tracking-tight transition-colors duration-200 ease-out group-hover:text-primary-strong">
+                      {deal.name}
+                    </h3>
+                    <div className="flex items-baseline gap-2 mt-1">
+                      <span className="text-xl font-semibold tabular-nums text-primary">{formatPrice(deal.price)}</span>
+                      {isOnSale(deal) && (
+                        <span className="text-sm tabular-nums text-muted-foreground line-through">{formatPrice(deal.originalPrice as number)}</span>
+                      )}
+                    </div>
+                  </div>
+                </Link>
               </FadeIn>
             ))}
           </div>
+          <p className="mt-4 text-center text-xs text-muted-foreground md:hidden">
+            Swipe to browse more deals
+          </p>
         </div>
       </section>
 
@@ -357,6 +389,115 @@ export default function HomePage() {
               >
                 <MessageCircle className="h-4 w-4" aria-hidden="true" />
                 Follow us on Instagram
+              </a>
+            </p>
+          </FadeIn>
+        </div>
+      </section>
+
+      {/* WhatsApp — the same banner/grid/link grammar as Instagram, in the
+          WhatsApp brand green. Contact channels are facts, not claims, so the
+          copy reads numbers and intents rather than promises. */}
+      <section className="py-16 md:py-24">
+        <div className="container mx-auto px-4">
+          <FadeIn>
+            <div className="mx-auto flex max-w-2xl flex-col items-center text-center">
+              <a
+                href={WHATSAPP_HREF}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 rounded-pill bg-gradient-to-tr from-[#25D366] via-[#128C7E] to-[#075E54] p-[2px] focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+              >
+                <span className="inline-flex items-center gap-2 rounded-pill bg-background px-4 py-2">
+                  <MessageCircle className="h-5 w-5" aria-hidden="true" />
+                  <span className="font-medium">{OWNER_PHONES[0].label}</span>
+                </span>
+              </a>
+              <h2 className="mt-6 text-3xl font-semibold tracking-tight md:text-4xl">
+                Chat With Us on WhatsApp
+              </h2>
+              <p className="mt-3 text-muted-foreground">
+                Price checks, stock questions, or orders — send a message and we&apos;ll take it from there.
+              </p>
+            </div>
+          </FadeIn>
+          <FadeIn delay={0.1}>
+            <a
+              href={WHATSAPP_HREF}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label={`Message ${OWNER_PHONES[0].label} on WhatsApp`}
+              className="relative mx-auto mt-10 inline-grid grid-cols-3 gap-2 focus-visible:outline-none"
+            >
+              {whatsappTiles.map((tile, index) => (
+                <span
+                  key={index}
+                  aria-hidden="true"
+                  className={`h-16 w-16 rounded-lg bg-gradient-to-br sm:h-20 sm:w-20 ${tile}`}
+                />
+              ))}
+              <span className="pointer-events-none absolute inset-0 flex items-center justify-center">
+                <span className="flex h-14 w-14 items-center justify-center rounded-pill bg-gradient-to-tr from-[#25D366] via-[#128C7E] to-[#075E54] text-white shadow-card">
+                  <MessageCircle className="h-7 w-7" aria-hidden="true" />
+                </span>
+              </span>
+            </a>
+          </FadeIn>
+          <FadeIn delay={0.15}>
+            <p className="mt-8 text-center">
+              <a
+                href={WHATSAPP_HREF}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 font-medium text-primary-strong underline-offset-4 transition-colors duration-200 ease-out hover:text-primary-strong/80 hover:underline"
+              >
+                <MessageCircle className="h-4 w-4" aria-hidden="true" />
+                Message us on WhatsApp
+              </a>
+            </p>
+          </FadeIn>
+        </div>
+      </section>
+
+      {/* Phone */}
+      <section className="bg-muted py-16 md:py-24">
+        <div className="container mx-auto px-4">
+          <FadeIn>
+            <div className="mx-auto flex max-w-2xl flex-col items-center text-center">
+              <span className="inline-flex items-center gap-2 rounded-pill bg-gradient-to-tr from-slate-600 via-slate-800 to-slate-950 p-[2px]">
+                <span className="inline-flex items-center gap-2 rounded-pill bg-background px-4 py-2">
+                  <Phone className="h-5 w-5" aria-hidden="true" />
+                  <span className="font-medium">Call the Store</span>
+                </span>
+              </span>
+              <h2 className="mt-6 text-3xl font-semibold tracking-tight md:text-4xl">
+                Talk to a Real Person
+              </h2>
+              <p className="mt-3 text-muted-foreground">
+                Choosing the right gear or checking what&apos;s in stock? Reach us directly on any line below.
+              </p>
+              <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+                {OWNER_PHONES.map((phone) => (
+                  <a
+                    key={phone.tel}
+                    href={`tel:${phone.tel}`}
+                    className="inline-flex items-center justify-center gap-2 rounded-pill bg-primary px-6 py-3 text-sm font-medium text-primary-foreground transition-colors duration-200 ease-out hover:bg-primary/90 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                  >
+                    <Phone className="h-4 w-4" aria-hidden="true" />
+                    {phone.label}
+                  </a>
+                ))}
+              </div>
+            </div>
+          </FadeIn>
+          <FadeIn delay={0.1}>
+            <p className="mt-8 text-center">
+              <a
+                href={`tel:${OWNER_PHONES[0].tel}`}
+                className="inline-flex items-center gap-2 font-medium text-primary-strong underline-offset-4 transition-colors duration-200 ease-out hover:text-primary-strong/80 hover:underline"
+              >
+                <Phone className="h-4 w-4" aria-hidden="true" />
+                Call {OWNER_PHONES[0].label}
               </a>
             </p>
           </FadeIn>

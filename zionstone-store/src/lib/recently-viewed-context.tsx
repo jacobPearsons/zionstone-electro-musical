@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import { createContext, useCallback, useContext, useMemo, useState, useEffect, ReactNode } from "react";
 import type { Product } from "@/data/products";
 import { readStoredArray } from "@/lib/utils";
 
@@ -43,20 +43,22 @@ export function RecentlyViewedProvider({ children }: { children: ReactNode }) {
     localStorage.setItem("recentlyViewed", JSON.stringify(items));
   }, [items, hydrated]);
 
-  const addItem = (product: Product) => {
+  const addItem = useCallback((product: Product) => {
     setItems((prev) => {
       const filtered = prev.filter((p) => p.id !== product.id);
       const newItems = [product, ...filtered].slice(0, MAX_ITEMS);
       return newItems;
     });
-  };
+  }, []);
 
-  const clearAll = () => {
+  const clearAll = useCallback(() => {
     setItems([]);
-  };
+  }, []);
+
+  const value = useMemo(() => ({ items, addItem, clearAll }), [items, addItem, clearAll]);
 
   return (
-    <RecentlyViewedContext.Provider value={{ items, addItem, clearAll }}>
+    <RecentlyViewedContext.Provider value={value}>
       {children}
     </RecentlyViewedContext.Provider>
   );

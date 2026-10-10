@@ -149,6 +149,12 @@ export function HeroCarousel() {
                       width={slide.imageWidth}
                       height={slide.imageHeight}
                       sizes="(min-width: 1024px) 448px, 100vw"
+                      // Only the first slide is the LCP element: it is the one
+                      // painted on initial load, so it is the only image worth
+                      // an eager fetch/preload hint. The later slides stay
+                      // lazy, saving an early request for art the user may
+                      // never look at.
+                      priority={index === 0}
                       className="w-auto max-w-full h-auto max-h-[360px] object-contain"
                     />
                   </div>
