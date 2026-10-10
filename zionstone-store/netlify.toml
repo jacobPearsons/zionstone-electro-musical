@@ -1,0 +1,27 @@
+# Netlify build configuration for the Zionstone storefront.
+#
+# Why this file exists: `next build` prerenders the static shell (including
+# /_not-found), so it needs NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY at build time.
+# `.env` is gitignored, so Netlify never saw it and ClerkProvider threw
+# "Missing publishableKey" during prerender, failing the whole build.
+#
+# The publishable key is client-visible by design — it ships in the browser
+# bundle — so committing it here is safe. The Clerk *secret* key is NOT, and
+# must be set in the Netlify UI (Site configuration → Environment variables) for
+# sign-in, /dashboard and /checkout to work at runtime.
+#
+# Environment variables set in the Netlify UI override the values below, so
+# pointing the site at real keys, a different API, or a custom domain does not
+# require editing this file.
+
+[build]
+  command = "bun run build"
+
+[build.environment]
+  NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY = "pk_test_c2V0LXRpY2stNTk3Ny5jbGVyay5hY2NvdW50cy5kZXYk"
+  # Express API service (see ../render.yaml). Without this the client falls
+  # back to http://localhost:4000 and every checkout/upload call fails in prod.
+  NEXT_PUBLIC_API_URL = "https://zionstone-api.onrender.com"
+  # Canonical origin for metadata/OG links. Override in the UI if a custom
+  # domain (e.g. https://www.zionstone.com) is the primary one.
+  NEXT_PUBLIC_SITE_URL = "https://zionstone.netlify.app"
