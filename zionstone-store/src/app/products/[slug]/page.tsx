@@ -5,20 +5,17 @@ import Image from "next/image";
 import Link from "next/link";
 import { ArrowLeft, Share2, Truck, Shield, RotateCcw, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { ShippingBadge, DeliveryEstimate, ShippingSelector } from '@/components/shipping';
-import { AddToCartButton, WishlistButton, ProductTabs, CompatibilityChecker, DeliveryEstimator, ProductImage, ContactOwnerButton } from '@/components/product';
+import { ShippingBadge } from '@/components/shipping';
+import { AddToCartButton, WishlistButton, ProductTabs, CompatibilityChecker, ProductImage, ContactOwnerButton } from '@/components/product';
 import { getProductBySlug, getRelatedProducts } from '@/data/products';
-import { calculateShipping, getShippingBadgeText } from '@/lib/shipping';
+import { getShippingBadgeText } from '@/lib/shipping';
 import { formatPrice } from '@/lib/utils';
 import { resolveImageSrc } from '@/lib/images';
 import { useRecentlyViewed } from '@/lib/recently-viewed-context';
-import type { ShippingMethod } from '@/types/shipping';
 
 export default function ProductDetailPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = use(params);
   const [quantity, setQuantity] = useState(1);
-  const [selectedShipping, setSelectedShipping] = useState<ShippingMethod | null>(null);
-  const [shippingCalculation, setShippingCalculation] = useState(() => calculateShipping('90210'));
   const [selectedImage, setSelectedImage] = useState(0);
   const [product, setProduct] = useState(() => getProductBySlug(slug));
   const { items: recentlyViewed, addItem } = useRecentlyViewed();
@@ -35,10 +32,6 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug: 
       addItem(product);
     }
   }, [product, addItem]);
-
-  const handleShippingChange = (method: ShippingMethod) => {
-    setSelectedShipping(method);
-  };
 
   if (!product) {
     return (
@@ -100,14 +93,18 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug: 
           
           {/* Thumbnail gallery */}
           {productImages.length > 1 && (
-            <div className="flex gap-3 overflow-x-auto pb-2">
+            <div
+              className="flex snap-x snap-mandatory gap-3 overflow-x-auto overscroll-x-contain scrollbar-hide pb-2"
+              role="group"
+              aria-label="Product image thumbnails"
+            >
               {productImages.map((img, i) => (
                 <button
                   key={i}
                   onClick={() => setSelectedImage(i)}
                   aria-label={`View image ${i + 1} of ${productImages.length}`}
                   aria-current={selectedImage === i ? 'true' : undefined}
-                  className={`relative flex-shrink-0 w-20 h-20 overflow-hidden rounded-card border-2 transition-colors duration-200 ease-out ${
+                  className={`relative snap-start flex-shrink-0 w-20 h-20 overflow-hidden rounded-card border-2 transition-colors duration-200 ease-out ${
                     selectedImage === i 
                       ? 'border-primary ring-2 ring-primary/20' 
                       : 'border-border hover:border-primary/40'
@@ -195,11 +192,6 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug: 
             </>
           )}
 
-          {/* Delivery Estimator - Quick Check */}
-          <div className="mb-6">
-            <DeliveryEstimator productId={product.slug} />
-          </div>
-
           {/* Tabbed Content */}
           <div className="mb-6">
             <ProductTabs
@@ -231,35 +223,9 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug: 
             )}
           </div>
 
-          {/* Shipping Information */}
-          <div className="mb-6 rounded-card border border-border bg-muted p-5">
-            <div className="mb-4 flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Truck className="w-5 h-5 text-muted-foreground" aria-hidden="true" />
-                <h3 className="font-semibold tracking-tight">Shipping to 90210</h3>
-              </div>
-              <button className="text-sm font-medium text-primary-strong underline-offset-4 transition-colors duration-200 ease-out hover:text-primary-strong/80 hover:underline">Change location</button>
-            </div>
-            
-            {selectedShipping && shippingCalculation.estimatedDeliveryDates[selectedShipping.id] && (
-              <DeliveryEstimate
-                estimatedDelivery={shippingCalculation.estimatedDeliveryDates[selectedShipping.id]}
-                shippingMethodName={selectedShipping.name}
-                className="mb-4"
-              />
-            )}
-            
-            <ShippingSelector
-              methods={shippingCalculation.methods}
-              estimatedDeliveryDates={shippingCalculation.estimatedDeliveryDates}
-              selectedMethodId={selectedShipping?.id || ''}
-              onSelect={handleShippingChange}
-            />
-          </div>
-
           {/* Add to Cart / Wishlist */}
           {product.price != null && (
-            <div className="flex items-center gap-4 mb-6">
+            <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center">
               {/* Quantity Selector */}
               <div className="flex items-center overflow-hidden rounded-card border border-border bg-background">
                 <button
@@ -299,7 +265,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug: 
                   brand: product.brand,
                   currency: product.currency,
                 }}
-                className="flex-1"
+                className="mt-0 flex-1"
               />
             </div>
           )}

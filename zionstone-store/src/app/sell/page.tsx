@@ -224,10 +224,11 @@ export default function SellPage() {
               placeholder="e.g. Fender Stratocaster American Pro II"
               className="mt-1.5"
               aria-invalid={Boolean(errors.name)}
+              aria-describedby={errors.name ? 'name-error' : undefined}
               {...register('name')}
             />
             {errors.name?.message && (
-              <p className={fieldError} role="alert">
+              <p id="name-error" className={fieldError} role="alert">
                 {errors.name.message}
               </p>
             )}
@@ -241,10 +242,12 @@ export default function SellPage() {
               id="brand"
               placeholder="e.g. Fender"
               className="mt-1.5"
+              aria-invalid={Boolean(errors.brand)}
+              aria-describedby={errors.brand ? 'brand-error' : undefined}
               {...register('brand')}
             />
             {errors.brand?.message && (
-              <p className={fieldError} role="alert">
+              <p id="brand-error" className={fieldError} role="alert">
                 {errors.brand.message}
               </p>
             )}
@@ -258,6 +261,7 @@ export default function SellPage() {
               id="category"
               className="mt-1.5 h-11 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
               aria-invalid={Boolean(errors.category)}
+              aria-describedby={errors.category ? 'category-error' : undefined}
               defaultValue=""
               {...register('category')}
             >
@@ -271,7 +275,7 @@ export default function SellPage() {
               ))}
             </select>
             {errors.category?.message && (
-              <p className={fieldError} role="alert">
+              <p id="category-error" className={fieldError} role="alert">
                 {errors.category.message}
               </p>
             )}
@@ -311,14 +315,16 @@ export default function SellPage() {
                 }}
                 onBlur={() => addTags(tagInput)}
                 placeholder={tags.length === 0 ? 'Type a tag and press Enter' : 'Add another tag'}
+                aria-invalid={tagsOverLimit}
+                aria-describedby={tagsOverLimit ? 'tags-hint tags-error' : 'tags-hint'}
                 className="min-w-[8rem] flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
               />
             </div>
-            <p className="mt-1 text-xs text-muted-foreground">
+            <p id="tags-hint" className="mt-1 text-xs text-muted-foreground">
               Up to {MAX_TAGS} tags. Press Enter or comma to add (e.g. electric, vintage, six-string).
             </p>
             {tagsOverLimit && (
-              <p className={fieldError} role="alert">
+              <p id="tags-error" className={fieldError} role="alert">
                 Add at most {MAX_TAGS} tags
               </p>
             )}
@@ -334,10 +340,11 @@ export default function SellPage() {
               placeholder="Describe the condition, history, and anything a buyer should know..."
               className="mt-1.5 w-full resize-none rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
               aria-invalid={Boolean(errors.description)}
+              aria-describedby={errors.description ? 'description-error' : undefined}
               {...register('description')}
             />
             {errors.description?.message && (
-              <p className={fieldError} role="alert">
+              <p id="description-error" className={fieldError} role="alert">
                 {errors.description.message}
               </p>
             )}
@@ -360,11 +367,12 @@ export default function SellPage() {
                 placeholder="Optional"
                 className="pl-8"
                 aria-invalid={Boolean(errors.price)}
+                aria-describedby={errors.price ? 'price-error' : undefined}
                 {...register('price')}
               />
             </div>
             {errors.price?.message && (
-              <p className={fieldError} role="alert">
+              <p id="price-error" className={fieldError} role="alert">
                 {errors.price.message}
               </p>
             )}
@@ -378,10 +386,12 @@ export default function SellPage() {
               id="contact"
               placeholder="e.g. +234 801 234 5678"
               className="mt-1.5"
+              aria-invalid={Boolean(errors.contact)}
+              aria-describedby={errors.contact ? 'contact-error' : undefined}
               {...register('contact')}
             />
             {errors.contact?.message && (
-              <p className={fieldError} role="alert">
+              <p id="contact-error" className={fieldError} role="alert">
                 {errors.contact.message}
               </p>
             )}
@@ -407,6 +417,7 @@ export default function SellPage() {
               <div
                 role="button"
                 tabIndex={0}
+                aria-describedby={imageError ? 'image-error' : undefined}
                 onClick={() => fileInputRef.current?.click()}
                 onKeyDown={(event) => {
                   if (event.key === 'Enter' || event.key === ' ') {
@@ -433,11 +444,16 @@ export default function SellPage() {
               type="file"
               accept="image/jpeg,image/png,image/webp"
               aria-label="Product photo"
+              // The real field carries the invalid state; the visible drop
+              // zone above carries the described-by message, since `role="button"`
+              // does not support `aria-invalid`.
+              aria-invalid={Boolean(imageError)}
+              aria-describedby={imageError ? 'image-error' : undefined}
               className="hidden"
               onChange={(event) => chooseImage(event.target.files?.[0])}
             />
             {imageError && (
-              <p className={fieldError} role="alert">
+              <p id="image-error" className={fieldError} role="alert">
                 {imageError}
               </p>
             )}

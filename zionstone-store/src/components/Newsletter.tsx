@@ -31,7 +31,7 @@ export function Newsletter() {
         <div className="w-16 h-16 bg-secondary-foreground/10 rounded-full flex items-center justify-center mx-auto mb-4">
           <Check className="w-8 h-8 text-primary-strong" aria-hidden="true" />
         </div>
-        <h3 className="text-2xl font-semibold tracking-tight">You&apos;re on the list!</h3>
+        <h2 className="text-2xl font-semibold tracking-tight">You&apos;re on the list!</h2>
         <p className="mt-2 text-secondary-foreground/80">Check your inbox for a special welcome offer.</p>
       </div>
     );
@@ -41,7 +41,7 @@ export function Newsletter() {
     <div className="bg-secondary text-secondary-foreground rounded-2xl p-8">
       <div className="max-w-md mx-auto text-center">
         <Mail className="w-12 h-12 mx-auto mb-4 text-primary" aria-hidden="true" />
-        <h3 className="text-2xl font-semibold tracking-tight">Get 10% Off Your First Order</h3>
+        <h2 className="text-2xl font-semibold tracking-tight">Get 10% Off Your First Order</h2>
         <p className="mt-2 text-secondary-foreground/80">
           Subscribe to our newsletter for exclusive deals, new arrivals, and music tips.
         </p>
@@ -68,7 +68,7 @@ export function Newsletter() {
             {loading ? 'Subscribing...' : 'Subscribe'}
           </Button>
         </form>
-        <p className="mt-3 text-xs text-secondary-foreground/60">
+        <p className="mt-3 text-xs text-secondary-foreground/80">
           We respect your privacy. Unsubscribe anytime.
         </p>
       </div>

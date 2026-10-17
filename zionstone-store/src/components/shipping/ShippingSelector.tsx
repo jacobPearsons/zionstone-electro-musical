@@ -39,7 +39,7 @@ export function ShippingSelector({
         return (
           <label
             key={method.id}
-            className={`relative flex items-start gap-3 p-4 border rounded-lg cursor-pointer transition-colors ${
+            className={`relative flex items-start gap-3 p-4 border rounded-lg cursor-pointer transition-colors focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2 focus-within:ring-offset-background ${
               isSelected
                 ? 'border-primary bg-primary/5 ring-1 ring-primary'
                 : 'border-border hover:border-foreground/20'

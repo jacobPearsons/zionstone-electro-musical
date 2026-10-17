@@ -95,8 +95,7 @@ export default function CheckoutPage() {
     setSelectedShipping(method);
   };
 
-  const handleShippingChange = () => {
-    const postalCode = shippingForm.getValues('postalCode');
+  const handleShippingChange = (postalCode: string) => {
     if (postalCode && postalCode.length === 5) {
       setShippingCalculation(calculateShipping(postalCode));
     }
@@ -189,14 +188,21 @@ export default function CheckoutPage() {
                 const isCompleted = index < currentStepIndex;
 
                 return (
-                  <div key={step.id} className="flex items-center">
+                  <div
+                    key={step.id}
+                    className="flex items-center"
+                    aria-current={isActive ? 'step' : undefined}
+                  >
                     <div className={`flex items-center gap-2 transition-colors duration-200 ease-out ${isActive ? 'text-primary-strong' : isCompleted ? 'text-emerald-600 dark:text-emerald-400' : 'text-muted-foreground'}`}>
                       <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
                         isActive ? 'bg-primary text-primary-foreground' : isCompleted ? 'bg-emerald-600 text-white' : 'bg-muted text-muted-foreground'
                       }`}>
                         {isCompleted ? <Check className="w-4 h-4" aria-hidden="true" /> : <Icon className="w-4 h-4" aria-hidden="true" />}
                       </div>
-                      <span className="font-medium hidden sm:block">{step.name}</span>
+                      {/* Hidden visually on small screens, never from the
+                          accessibility tree — `hidden` removed the step name
+                          for screen-reader users on mobile. */}
+                      <span className="font-medium sr-only sm:not-sr-only sm:inline">{step.name}</span>
                     </div>
                     {index < steps.length - 1 && (
                       <ChevronRight className="w-5 h-5 text-border mx-4" aria-hidden="true" />
@@ -227,7 +233,10 @@ export default function CheckoutPage() {
             <div className="rounded-card border border-border bg-card p-6">
               {/* Shipping Step */}
               {currentStep === 'shipping' && (
-                <form onSubmit={shippingForm.handleSubmit(() => setCurrentStep('delivery'))} className="space-y-6">
+                <form onSubmit={shippingForm.handleSubmit((data) => {
+                  handleShippingChange(data.postalCode);
+                  setCurrentStep('delivery');
+                })} className="space-y-6">
                   <h2 className="text-xl font-semibold tracking-tight">Contact Information</h2>
                   
                   <div>
@@ -346,7 +355,9 @@ export default function CheckoutPage() {
                         autoComplete="postal-code"
                         aria-invalid={Boolean(shippingForm.formState.errors.postalCode)}
                         aria-describedby={shippingForm.formState.errors.postalCode ? 'checkout-postal-error' : undefined}
-                        {...shippingForm.register('postalCode')}
+                        {...shippingForm.register('postalCode', {
+                          onChange: (event) => handleShippingChange(event.target.value),
+                        })}
                         maxLength={5}
                       />
                       {shippingForm.formState.errors.postalCode && (

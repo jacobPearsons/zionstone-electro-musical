@@ -73,7 +73,12 @@ export function HeroCarousel() {
   const next = () => setCurrent((current + 1) % slides.length);
 
   return (
-    <section className="relative bg-secondary text-secondary-foreground overflow-hidden">
+    <section
+      className="relative bg-secondary text-secondary-foreground overflow-hidden"
+      role="region"
+      aria-roledescription="carousel"
+      aria-label="Featured"
+    >
       {/* Full-bleed photographic backdrop. Decorative, so it is invisible to
           assistive tech (empty alt + aria-hidden) and needs no description. It
           is eager with `priority` because it is now the largest above-the-fold
@@ -145,7 +150,15 @@ export function HeroCarousel() {
                       {slide.badge}
                     </div>
                   )}
-                  <h1 className="text-4xl md:text-6xl font-semibold tracking-tight mb-6">{slide.title}</h1>
+                  {/* Exactly one `<h1>` exists in the DOM at a time: the active
+                      slide's title is the page heading, and the inactive ones
+                      are inert so they are not announced anyway — rendering
+                      them as `<h2>` keeps the heading outline at a single h1. */}
+                  {isActive ? (
+                    <h1 className="text-4xl md:text-6xl font-semibold tracking-tight mb-6">{slide.title}</h1>
+                  ) : (
+                    <h2 className="text-4xl md:text-6xl font-semibold tracking-tight mb-6">{slide.title}</h2>
+                  )}
                   <p className="text-xl md:text-2xl text-secondary-foreground/80 mb-8">{slide.subtitle}</p>
                   <Link
                     href={slide.ctaLink}
@@ -204,7 +217,21 @@ export function HeroCarousel() {
             visible mark stays small: 20px chevrons, 8px dots. The padding is
             transparent, so the cluster reads no heavier than it did before. */}
         {hasControls && (
-          <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex items-center">
+          <div
+            className="absolute bottom-8 left-1/2 -translate-x-1/2 flex items-center"
+            // Arrow keys work wherever focus sits inside the cluster (the
+            // events bubble from the focused button), matching the common
+            // carousel pattern without making the cluster itself focusable.
+            onKeyDown={(event) => {
+              if (event.key === 'ArrowLeft') {
+                event.preventDefault();
+                prev();
+              } else if (event.key === 'ArrowRight') {
+                event.preventDefault();
+                next();
+              }
+            }}
+          >
             <button
               type="button"
               onClick={prev}

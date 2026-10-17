@@ -142,7 +142,12 @@ export function QueueList({
                 <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
                   <span className="font-mono text-xs text-muted-foreground">{item.id}</span>
                   <div className="flex gap-2">
-                    <Button size="sm" disabled={busy} onClick={() => update(item.id, 'approve')}>
+                    <Button
+                      size="sm"
+                      disabled={busy}
+                      aria-label={`Approve ${item.name}`}
+                      onClick={() => update(item.id, 'approve')}
+                    >
                       {isApproving ? (
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" />
                       ) : (
@@ -154,6 +159,7 @@ export function QueueList({
                       variant="outline"
                       size="sm"
                       disabled={busy}
+                      aria-label={`Reject ${item.name}`}
                       onClick={() => update(item.id, 'reject')}
                     >
                       {isRejecting ? (

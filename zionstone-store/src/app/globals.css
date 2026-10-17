@@ -71,6 +71,16 @@
     @apply bg-background text-foreground;
   }
 
+  /* Lock horizontal panning on mobile: a single over-wide child (e.g. the
+     product thumbnail rail mid-swipe) must never let the whole viewport slide
+     sideways. `clip` rather than `hidden` so it does not become a scroll
+     container — an `overflow: hidden` ancestor breaks `position: sticky` on the
+     header. */
+  html,
+  body {
+    overflow-x: clip;
+  }
+
   /* Keyboard focus must be visible everywhere (WCAG 2.4.7). Built on --ring so
      it follows the brand gold and flips with .dark. Uses `outline` rather than a
      box-shadow ring so the `shadow-*` utilities used on cards cannot erase it. */

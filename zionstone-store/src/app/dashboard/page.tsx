@@ -87,6 +87,11 @@ export default function DashboardPage() {
   const [expandedOrder, setExpandedOrder] = useState<string | null>(null);
   const { addItem } = useCart();
 
+  // Shared by the row's click and its keyboard handler so both paths expand
+  // exactly the same way.
+  const toggleOrder = (id: string) =>
+    setExpandedOrder((current) => (current === id ? null : id));
+
   // There is no `isLoaded` branch here any more, and there was never a reason
   // for one. Every value this page renders is a module constant, so there is no
   // fetch to wait for, and Clerk hands the session to the client through the SSR
@@ -205,12 +210,17 @@ export default function DashboardPage() {
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
+      <div role="tablist" aria-label="Dashboard sections" className="flex gap-2 mb-6 overflow-x-auto pb-2">
         {tabs.map((tab) => {
           const Icon = tab.icon;
           return (
             <button
               key={tab.id}
+              type="button"
+              role="tab"
+              id={`dashboard-tab-${tab.id}`}
+              aria-selected={activeTab === tab.id}
+              aria-controls={`dashboard-panel-${tab.id}`}
               onClick={() => setActiveTab(tab.id)}
               className={`flex items-center gap-2 px-4 py-2 rounded-lg whitespace-nowrap transition-colors duration-200 ease-out ${
                 activeTab === tab.id 
@@ -218,7 +228,7 @@ export default function DashboardPage() {
                   : 'bg-muted hover:bg-primary/10 hover:text-primary-strong'
               }`}
             >
-              <Icon className="w-4 h-4" />
+              <Icon className="w-4 h-4" aria-hidden="true" />
               {tab.name}
             </button>
           );
@@ -226,7 +236,13 @@ export default function DashboardPage() {
       </div>
 
       {/* Tab Content */}
-      <div className="rounded-card border border-border bg-card p-6">
+      <div
+        role="tabpanel"
+        id={`dashboard-panel-${activeTab}`}
+        aria-labelledby={`dashboard-tab-${activeTab}`}
+        tabIndex={0}
+        className="rounded-card border border-border bg-card p-6"
+      >
         {/* Orders Tab */}
         {activeTab === 'orders' && (
           <div className="space-y-4">
@@ -237,8 +253,18 @@ export default function DashboardPage() {
             {orders.map((order) => (
               <div key={order.id} className="rounded-card border border-border overflow-hidden">
                 <div 
-                  className="flex items-center justify-between p-4 cursor-pointer transition-colors duration-200 ease-out hover:bg-muted"
-                  onClick={() => setExpandedOrder(expandedOrder === order.id ? null : order.id)}
+                  role="button"
+                  tabIndex={0}
+                  aria-expanded={expandedOrder === order.id}
+                  aria-controls={`order-tracking-${order.id}`}
+                  className="flex items-center justify-between p-4 cursor-pointer transition-colors duration-200 ease-out hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                  onClick={() => toggleOrder(order.id)}
+                  onKeyDown={(event) => {
+                    if (event.key === 'Enter' || event.key === ' ') {
+                      event.preventDefault();
+                      toggleOrder(order.id);
+                    }
+                  }}
                 >
                   <div className="flex items-center gap-4">
                     <div className="w-12 h-12 bg-muted rounded-card flex items-center justify-center">
@@ -263,10 +289,10 @@ export default function DashboardPage() {
                 
                 {/* Expanded Order Tracking */}
                 {expandedOrder === order.id && (
-                  <div className="border-t border-border p-4 bg-muted">
+                  <div id={`order-tracking-${order.id}`} className="border-t border-border p-4 bg-muted">
                     {/* Tracking Progress */}
                     <div className="mb-4">
-                      <h4 className="font-medium tracking-tight mb-3">Order Tracking</h4>
+                      <h3 className="font-medium tracking-tight mb-3">Order Tracking</h3>
                       <div className="relative">
                         <div className="flex justify-between mb-2">
                           {order.trackingSteps.map((step, idx) => (

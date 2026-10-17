@@ -91,8 +91,10 @@ export function Header() {
               </div>
             </Link>
             
-            {/* Desktop Navigation with Mega Menu */}
-            <nav className="hidden lg:flex items-center gap-6 relative group">
+            {/* Desktop Navigation with Mega Menu. The menu reveals on hover and,
+                since the category links are the trigger, on focus-within too —
+                keyboard users reach the same panel the pointer gets. */}
+            <nav aria-label="Main" className="hidden lg:flex items-center gap-6 relative group">
               {CATEGORIES.map((category) => (
                 <Link
                   key={category.slug}

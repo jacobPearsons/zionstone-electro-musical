@@ -5,7 +5,7 @@ import { CATEGORIES, brandsInCategory } from '@/data/categories';
 
 export function MegaMenu() {
   return (
-    <div className="absolute top-full left-0 w-full z-40 hidden border-b border-border bg-popover text-popover-foreground group-hover:block animate-in fade-in slide-in-from-top-2 duration-200">
+    <div className="absolute top-full left-0 w-full z-40 hidden border-b border-border bg-popover text-popover-foreground group-hover:block group-focus-within:block animate-in fade-in slide-in-from-top-2 duration-200">
       <div className="container mx-auto px-4 py-8">
         <nav aria-label="Product categories" className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
           {CATEGORIES.map(category => {

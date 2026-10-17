@@ -202,7 +202,10 @@ function ProductsPageContent() {
 
       {/* Mobile Filter Toggle */}
       <button
+        type="button"
         onClick={() => setShowFilters(!showFilters)}
+        aria-expanded={showFilters}
+        aria-controls="product-filters"
         className="md:hidden w-full mb-4 flex items-center justify-center gap-2 py-3 rounded-card border border-border bg-card transition-colors duration-200 ease-out hover:bg-muted"
       >
         <SlidersHorizontal className="w-4 h-4" aria-hidden="true" />
@@ -214,7 +217,11 @@ function ProductsPageContent() {
 
       <div className="flex gap-8">
         {/* Filters Sidebar */}
-        <aside className={`w-64 flex-shrink-0 ${showFilters ? 'block' : 'hidden'} md:block`}>
+        <aside
+          id="product-filters"
+          aria-label="Product filters"
+          className={`w-64 flex-shrink-0 ${showFilters ? 'block' : 'hidden'} md:block`}
+        >
           <div className="sticky top-4 space-y-6 rounded-card border border-border bg-card p-4">
             {/* 2-Day Shipping Filter */}
             <div className="flex items-center justify-between">

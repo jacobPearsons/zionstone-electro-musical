@@ -1,27 +1,20 @@
 'use client';
 
-import { useState, useEffect } from 'react';
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { useCart } from "@/lib/cart-context";
-import { Trash2, Plus, Minus, ShoppingBag, Truck } from "lucide-react";
+import { Trash2, Plus, Minus, ShoppingBag } from "lucide-react";
 import { formatPrice } from "@/lib/utils";
-import { ShippingCalculator, DeliveryEstimate } from "@/components/shipping";
 import { ProductImage } from "@/components/product";
 import {
-  calculateShipping,
   qualifiesForFreeShipping,
   FREE_SHIPPING_THRESHOLD,
-  STANDARD_SHIPPING_FALLBACK,
 } from "@/lib/shipping";
 import { promoDiscount } from "@/lib/promo-codes";
 import { PromoCodeInput } from "@/components/PromoCodeInput";
-import type { ShippingMethod } from "@/types/shipping";
 
 export default function CartPage() {
   const { items, removeItem, updateQuantity, totalPrice, clearCart, promo, setPromo } = useCart();
-  const [selectedShipping, setSelectedShipping] = useState<ShippingMethod | null>(null);
-  const [estimatedDelivery, setEstimatedDelivery] = useState<string | null>(null);
 
   // The promo contributes a rate, not an amount: the saving is always derived
   // from the live subtotal, and `promoDiscount` clamps it to the subtotal so a
@@ -30,13 +23,9 @@ export default function CartPage() {
   // Measured on the subtotal *before* the discount, so applying a promo never
   // takes away free shipping the customer was already promised.
   const freeShipping = qualifiesForFreeShipping(totalPrice);
-  const shippingCost = selectedShipping?.price ?? (freeShipping ? 0 : STANDARD_SHIPPING_FALLBACK);
-  const finalTotal = Math.max(0, totalPrice - discount + shippingCost);
-
-  const handleShippingCalculate = (method: ShippingMethod, deliveryDate: string) => {
-    setSelectedShipping(method);
-    setEstimatedDelivery(deliveryDate);
-  };
+  // Shipping is chosen and priced at checkout, so the cart total is the
+  // merchandise total only — no guessed flat shipping fee here.
+  const finalTotal = Math.max(0, totalPrice - discount);
 
   if (items.length === 0) {
     return (
@@ -112,23 +101,6 @@ export default function CartPage() {
           <div className="rounded-card border border-border bg-muted p-6 sticky top-24">
             <h2 className="text-lg font-semibold tracking-tight mb-4">Order Summary</h2>
             
-            {/* Shipping Calculator */}
-            <div className="mb-6">
-              <div className="flex items-center gap-2 mb-3">
-                <Truck className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
-                <span className="text-sm font-medium">Shipping</span>
-              </div>
-              <ShippingCalculator onCalculate={handleShippingCalculate} />
-              
-              {estimatedDelivery && selectedShipping && (
-                <DeliveryEstimate
-                  estimatedDelivery={estimatedDelivery}
-                  shippingMethodName={selectedShipping.name}
-                  className="mt-4"
-                />
-              )}
-            </div>
-            
             <div className="space-y-3 mb-6">
               <PromoCodeInput onApply={(applied) => setPromo(applied?.code ?? null)} subtotal={totalPrice} />
 
@@ -144,14 +116,9 @@ export default function CartPage() {
               )}
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">Shipping</span>
-                <span className="tabular-nums">
-                  {selectedShipping
-                    ? formatPrice(selectedShipping.price)
-                    : (freeShipping ? "Free" : formatPrice(STANDARD_SHIPPING_FALLBACK))
-                  }
-                </span>
+                <span className="text-muted-foreground">Calculated at checkout</span>
               </div>
-              {freeShipping && !selectedShipping && (
+              {freeShipping && (
                 <p className="text-sm text-emerald-600 dark:text-emerald-400">
                   Free shipping applied on orders over {formatPrice(FREE_SHIPPING_THRESHOLD)}
                 </p>
